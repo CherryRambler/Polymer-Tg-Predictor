@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+venv/
+.venv/
+
+# Trained model binaries -- regenerable from src/train_baseline.py and
+# src/gnn_train.py. Can get large, so we don't want to bloat git history.
+models/*.joblib
+models/*.pt
+models/*.pth
+
+# Pre-built GNN graph objects -- regenerable from src/gnn_data.py.
+# These are binary blobs (7,363 molecular graphs), not human-readable,
+# and can be rebuilt from data/raw/ + gnn_data.py at any time, so no
+# reason to track them in git.
+data/processed/graph/*.pt
+
+# OS junk
+.DS_Store
+
+# Processed tabular data is regenerable via src/featurize.py from
+# data/raw/, so we don't track it -- only raw source data is tracked.
+data/processed/*.csv
