@@ -24,3 +24,5 @@ data/processed/graph/*.pt
 # Processed tabular data is regenerable via src/featurize.py from
 # data/raw/, so we don't track it -- only raw source data is tracked.
 data/processed/*.csv
+
+.claude/
