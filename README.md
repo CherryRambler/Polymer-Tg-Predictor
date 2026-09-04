@@ -167,6 +167,16 @@ requires a diffusion-coefficient dataset, which we don't yet have.
   overfitting to one fixed set of collocation points; fixed by resampling
   fresh points across multiple smaller L-BFGS rounds instead of one large
   call on frozen points.
+- The Phase 4 DeepONet's error is not uniform across D: on the held-out
+  evaluation set (`src/phase4_neural_operator/deeponet_evaluate.py`), MAE
+  is worst near the low-D extreme (D=0.02 -> MAE 0.298) and much better
+  in the middle of the trained range (D=0.55 -> MAE 0.025). It also
+  occasionally predicts slightly negative concentrations at high D
+  (physically impossible, since concentration can't be negative) --
+  a real limitation of training on only 100 D samples for 600 epochs,
+  not a display bug. Training on more D samples/epochs would likely
+  reduce this; we report the numbers as measured rather than a
+  hand-picked better run.
 
 ## Roadmap
 
@@ -176,4 +186,8 @@ requires a diffusion-coefficient dataset, which we don't yet have.
 - [x] Phase 3: Physics-Informed Neural Network (diffusion PDE, mean error
       0.0062 vs. exact solution) -- not yet connected to Phase 1/2's
       structure-to-property predictions
-- [ ] Phase 4: Neural Operators (DeepONet / FNO)
+- [x] Phase 4: Neural Operator (DeepONet, trained once across D in
+      [0.01, 1.0]; MAE 0.0758 / R2 0.661 on held-out D values not seen
+      during training -- trades some accuracy vs. a dedicated per-D PINN
+      for instant inference; accuracy is worst near the low-D extreme,
+      see Known Issues)

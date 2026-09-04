@@ -13,6 +13,7 @@ Run locally:
 
 # pyrefly: ignore [missing-import]
 import streamlit as st
+import json
 import numpy as np
 import pandas as pd
 import torch
@@ -44,6 +45,15 @@ try:
     from permeability_to_D import permeability_to_D  # noqa: E402
 except ImportError:
     PERMEABILITY_AVAILABLE = False
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src", "phase4_neural_operator"))
+
+DEEPONET_AVAILABLE = True
+try:
+    # pyrefly: ignore [missing-import]
+    from deeponet_model import DeepONet  # noqa: E402
+except ImportError:
+    DEEPONET_AVAILABLE = False
 
 st.set_page_config(
     page_title="Polymer Property Predictor",
@@ -472,6 +482,40 @@ def load_permeability_model():
     return joblib.load("models/permeability_xgb.joblib")
 
 
+@st.cache_resource
+def load_deeponet_model():
+    """Load the Phase 4 DeepONet. Caller must check os.path.exists first."""
+    model = DeepONet(hidden_dim=64, n_hidden_layers=3, latent_dim=64)
+    state = torch.load("models/deeponet_diffusion.pt", map_location="cpu", weights_only=True)
+    model.load_state_dict(state)
+    model.eval()
+    return model
+
+
+def get_structure_driven_D(smiles, parsed_ok):
+    """Predict an effective diffusion coefficient D from a SMILES string,
+    via the Phase 3 permeability model + permeability_to_D(), if both are
+    available. Returns None if the permeability pipeline isn't available,
+    the SMILES doesn't parse, or anything goes wrong -- callers should
+    treat None as "fall back to manual D".
+
+    Shared by the Drug Release (PINN) tab and the Instant Prediction
+    (DeepONet) tab so they always agree on the same structure-to-D value
+    for a given polymer.
+    """
+    if not (PERMEABILITY_AVAILABLE and os.path.exists("models/permeability_xgb.joblib") and parsed_ok):
+        return None
+    try:
+        perm_model = load_permeability_model()
+        X_perm = featurize_smiles(smiles)
+        if X_perm is None:
+            return None
+        log10_permeability = float(perm_model.predict(X_perm)[0])
+        return permeability_to_D(log10_permeability)
+    except Exception:
+        return None
+
+
 def featurize_smiles(smiles, n_bits=256, radius=2):
     mol = Chem.MolFromSmiles(smiles)
     if mol is None:
@@ -496,6 +540,36 @@ def _cached_pinn_release_curve(D_rounded):
     with torch.no_grad():
         C_center = model(x_center, t_tensor).numpy().flatten()
     return t_plot, C_center
+
+
+def deeponet_release_curve(D_value):
+    """Evaluate the trained DeepONet for a given D. A single forward pass
+    (no training loop), so this is fast enough to call directly on every
+    slider movement -- the entire point of Phase 4.
+    """
+    model = load_deeponet_model()
+    t_plot = np.linspace(0, 5.0, 200)
+    D_tensor = torch.full((len(t_plot), 1), float(D_value), dtype=torch.float32)
+    x_center = torch.full((len(t_plot), 1), 0.5, dtype=torch.float32)
+    t_tensor = torch.tensor(t_plot, dtype=torch.float32).reshape(-1, 1)
+    with torch.no_grad():
+        C_center = model(D_tensor, x_center, t_tensor).numpy().flatten()
+    return t_plot, C_center
+
+
+def load_deeponet_eval_results():
+    """Read the real held-out MAE/R2 saved by deeponet_evaluate.py, if it
+    has been run. Returns None if the results file doesn't exist yet --
+    callers must not fabricate a number in that case.
+    """
+    path = os.path.join(os.path.dirname(__file__), "results", "deeponet_evaluation.json")
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path) as f:
+            return json.load(f)
+    except Exception:
+        return None
 
 
 def render_molecule_image(smiles, size=(260, 220)):
@@ -593,7 +667,12 @@ polymer_name = st.session_state.polymer_choice if st.session_state.polymer_choic
 # ---------------------------------------------------------------------------
 # Feature tabs
 # ---------------------------------------------------------------------------
-tab1, tab2, tab3 = st.tabs(["🌡 Glass Transition Temperature", "💊 Drug Release", "📖 About"])
+tab1, tab2, tab4, tab3 = st.tabs([
+    "🌡 Glass Transition Temperature",
+    "💊 Drug Release",
+    "⚡ Instant Prediction (Neural Operator)",
+    "📖 About",
+])
 
 with tab1:
     st.markdown('<div class="ppp-card">', unsafe_allow_html=True)
@@ -753,16 +832,7 @@ with tab2:
     )
 
     # ---- Structure-driven D (Phase 3 permeability model), if available ----
-    auto_D = None
-    if PERMEABILITY_AVAILABLE and os.path.exists("models/permeability_xgb.joblib") and _parsed_ok:
-        try:
-            perm_model = load_permeability_model()
-            X_perm = featurize_smiles(smiles_input)
-            if X_perm is not None:
-                log10_permeability = float(perm_model.predict(X_perm)[0])
-                auto_D = permeability_to_D(log10_permeability)
-        except Exception:
-            auto_D = None
+    auto_D = get_structure_driven_D(smiles_input, _parsed_ok)
 
     if auto_D is not None:
         st.info(
@@ -843,20 +913,162 @@ with tab2:
 
     st.markdown('</div>', unsafe_allow_html=True)
 
+with tab4:
+    st.markdown('<div class="ppp-card">', unsafe_allow_html=True)
+
+    deeponet_ready = DEEPONET_AVAILABLE and os.path.exists("models/deeponet_diffusion.pt")
+    eval_results = load_deeponet_eval_results() if deeponet_ready else None
+
+    if eval_results is not None:
+        accuracy_note = (
+            f"validated MAE {eval_results['mae']:.4f}, "
+            f"R² {eval_results['r2']:.3f} on {len(eval_results['D_values_tested'])} "
+            f"D values never seen during training"
+        )
+    else:
+        accuracy_note = "accuracy not yet validated -- run deeponet_evaluate.py"
+
+    st.markdown(
+        f"""
+        <div class="ppp-explain" style="margin-top:0;">
+        <b>What's different here:</b> the Drug Release tab trains a fresh
+        PINN from scratch every time you change D (~20&ndash;30 seconds).
+        This tab instead uses a <b>DeepONet</b> (a neural operator)
+        trained once, offline, across many D values &mdash; evaluating a
+        new D afterward is a single forward pass, so the curve updates
+        instantly as you move the slider. The tradeoff is a small drop in
+        accuracy versus training a dedicated PINN for that exact D
+        ({accuracy_note}).
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    if not deeponet_ready:
+        st.info(
+            "ℹ️ The trained DeepONet model wasn't found "
+            "(models/deeponet_diffusion.pt). Run "
+            "`python src/phase4_neural_operator/train_deeponet.py` to "
+            "enable this tab."
+        )
+    else:
+        auto_D_instant = get_structure_driven_D(smiles_input, _parsed_ok)
+
+        if auto_D_instant is not None:
+            st.info(
+                f"🔬 Predicted CO₂ permeability suggests an effective "
+                f"diffusion coefficient of **D ≈ {auto_D_instant:.2f}** "
+                f"(same structure-to-D pipeline as the Drug Release tab)."
+            )
+
+        use_structure_D_instant = st.checkbox(
+            "Use structure-predicted D",
+            value=(auto_D_instant is not None),
+            disabled=(auto_D_instant is None),
+            key="instant_use_structure_D",
+        )
+
+        st.markdown('<p class="ppp-label">Effective diffusion coefficient (D)</p>', unsafe_allow_html=True)
+        D_instant = st.slider(
+            "Effective diffusion coefficient (D)",
+            min_value=0.01, max_value=1.0, value=0.3, step=0.01,
+            help="Move this slider -- the curve below updates instantly, no retraining.",
+            label_visibility="collapsed",
+            key="instant_D_slider",
+        )
+
+        if use_structure_D_instant and auto_D_instant is not None:
+            D_instant = auto_D_instant
+
+        release_speed_instant = (
+            "slow release" if D_instant < 0.33
+            else "moderate release" if D_instant < 0.66
+            else "fast release"
+        )
+        st.caption(f"Current value: **D = {D_instant:.2f}** — {release_speed_instant}")
+
+        compare_with_pinn = st.checkbox(
+            "Also show the PINN's live-trained curve for the same D (slower, for comparison)",
+            value=False,
+            disabled=not _parsed_ok,
+        )
+
+        if not _parsed_ok:
+            st.markdown(
+                '<p class="ppp-hint-inline">Enter a valid SMILES string above to see a release curve.</p>',
+                unsafe_allow_html=True,
+            )
+        else:
+            try:
+                t_plot, C_deeponet = deeponet_release_curve(D_instant)
+
+                fig, ax = plt.subplots(figsize=(7, 4.2))
+                fig.patch.set_facecolor("#171b2b")
+                ax.set_facecolor("#171b2b")
+                ax.plot(t_plot, C_deeponet, linewidth=2.5, color="#34d399",
+                        label="DeepONet (instant)")
+                ax.fill_between(t_plot, C_deeponet, alpha=0.12, color="#34d399")
+
+                if compare_with_pinn:
+                    with st.spinner("⏳ Training PINN for comparison... (about 20-30 seconds)"):
+                        _, C_pinn = _cached_pinn_release_curve(round(D_instant, 2))
+                    ax.plot(t_plot, C_pinn, linewidth=2, color="#818cf8", linestyle="--",
+                            label="PINN (live-trained)")
+
+                ax.set_xlabel("Time", fontsize=10, color="#94a3b8")
+                ax.set_ylabel("Concentration at slab center", fontsize=10, color="#94a3b8")
+                ax.set_title(f"Instant release curve: {polymer_name} (D={D_instant:.2f})",
+                              fontsize=12, fontweight="bold", color="#e2e8f0")
+                ax.tick_params(colors="#64748b")
+                ax.grid(alpha=0.15, color="#64748b")
+                ax.legend(fontsize=9, facecolor="#171b2b", edgecolor="#2e3548", labelcolor="#e2e8f0")
+                for spine in ["top", "right"]:
+                    ax.spines[spine].set_visible(False)
+                for spine in ["bottom", "left"]:
+                    ax.spines[spine].set_color("#2e3548")
+                st.pyplot(fig)
+
+                st.markdown(
+                    """
+                    <div class="ppp-explain">
+                    <b>How to read this:</b> the green curve is the
+                    DeepONet's instant prediction. If you enabled the
+                    comparison, the dashed curve is what the Phase 3 PINN
+                    predicts after training from scratch for this same D
+                    &mdash; the two should look similar, illustrating the
+                    speed/accuracy tradeoff described above.
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+            except Exception:
+                st.error("⚠ The instant prediction could not complete. Please try a different SMILES string or D value.")
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
 with tab3:
     st.markdown('<div class="ppp-card">', unsafe_allow_html=True)
     st.markdown('<p class="ppp-card-title">📖 About this project</p>', unsafe_allow_html=True)
     st.markdown(
         "A from-scratch ML project predicting polymer properties from "
-        "molecular structure, built in three phases."
+        "molecular structure, built in four phases."
     )
+    _phase4_eval = load_deeponet_eval_results()
+    if _phase4_eval is not None:
+        _phase4_result = (
+            f"MAE {_phase4_eval['mae']:.4f}, R² {_phase4_eval['r2']:.3f} "
+            f"on held-out D values"
+        )
+    else:
+        _phase4_result = "not yet validated (run deeponet_evaluate.py)"
     st.markdown(
-        """
+        f"""
 | Phase | Approach | Result |
 |---|---|---|
 | 1 | Random Forest / XGBoost on Morgan fingerprints | XGBoost MAE 27.5°C, R² 0.87 |
 | 2 | Graph Neural Network (GINEConv) | Ensemble MAE 26.7°C, R² 0.855 |
 | 3 | Physics-Informed Neural Network (diffusion PDE) | Mean error 0.0062 vs. exact solution |
+| 4 | Neural Operator (DeepONet, diffusion PDE across many D) | {_phase4_result} |
 """
     )
     st.caption(
