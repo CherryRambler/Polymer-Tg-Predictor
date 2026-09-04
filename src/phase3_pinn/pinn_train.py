@@ -24,15 +24,13 @@ import os
 
 from pinn_model import PINN
 
-D = 0.1
 L = 1.0
 T_MAX = 5.0
 C0 = 1.0
 
-MODEL_OUT = "models/pinn_diffusion.pt"
-os.makedirs(os.path.dirname(MODEL_OUT), exist_ok=True)
+DEFAULT_MODEL_OUT = "models/pinn_diffusion.pt"
 
-def pde_residual_loss(model, n_points, device):
+def pde_residual_loss(model, D, n_points, device):
     x = torch.rand(n_points, 1, device=device, requires_grad=True) * L
     t = torch.rand(n_points, 1, device=device, requires_grad=True) * T_MAX
     C = model(x, t)
@@ -57,37 +55,44 @@ def boundary_condition_loss(model, n_points, device):
     C_right = model(x_right, t)
     return torch.mean(C_left ** 2) + torch.mean(C_right ** 2)
 
-def main():
+def train_pinn(D=0.1, model_out=DEFAULT_MODEL_OUT, n_epochs=5000,
+               n_lbfgs_rounds=10, n_pde_points=2000, n_ic_points=200,
+               n_bc_points=200, verbose=True):
+    """Train the PINN on the diffusion equation for a given D.
+
+    If model_out is a path, the trained weights are saved there. If
+    model_out is None/falsy, training runs in-memory only (used by the
+    Streamlit app for quick, on-the-fly demo runs). Returns the trained
+    model.
+    """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Using device: {device}")
+    if verbose:
+        print(f"Using device: {device}")
 
     model = PINN(hidden_dim=64, n_hidden_layers=3).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-    n_epochs = 5000
-    n_pde_points = 2000
-    n_ic_points = 200
-    n_bc_points = 200
-
-    print("Starting training...")
+    if verbose:
+        print("Starting training...")
+    loss = None
     for epoch in range(1, n_epochs + 1):
         optimizer.zero_grad()
-        loss_pde = pde_residual_loss(model, n_pde_points, device)
+        loss_pde = pde_residual_loss(model, D, n_pde_points, device)
         loss_ic = initial_condition_loss(model, n_ic_points, device)
         loss_bc = boundary_condition_loss(model, n_bc_points, device)
         loss = loss_pde + 10.0 * loss_ic + 10.0 * loss_bc
         loss.backward()
         optimizer.step()
 
-        if epoch % 500 == 0 or epoch == n_epochs:
+        if verbose and (epoch % 500 == 0 or epoch == n_epochs):
             print(f"Epoch {epoch:5d} | Total = {loss.item():.5f} | "
                   f"PDE = {loss_pde.item():.5f} | IC = {loss_ic.item():.5f} | "
                   f"BC = {loss_bc.item():.5f}")
 
-    print(f"\nAdam phase done. Loss = {loss.item():.6f}")
+    if verbose and loss is not None:
+        print(f"\nAdam phase done. Loss = {loss.item():.6f}")
+        print("\nStarting L-BFGS fine-tuning...")
 
-    print("\nStarting L-BFGS fine-tuning...")
-    n_lbfgs_rounds = 10
     for round_idx in range(1, n_lbfgs_rounds + 1):
         x_pde = torch.rand(n_pde_points, 1, device=device, requires_grad=True) * L
         t_pde = torch.rand(n_pde_points, 1, device=device, requires_grad=True) * T_MAX
@@ -119,10 +124,19 @@ def main():
         lbfgs_optimizer.step(closure)
         with torch.enable_grad():
             round_loss = closure()
-        print(f"L-BFGS round {round_idx:2d}/{n_lbfgs_rounds} | Loss = {round_loss.item():.6f}")
+        if verbose:
+            print(f"L-BFGS round {round_idx:2d}/{n_lbfgs_rounds} | Loss = {round_loss.item():.6f}")
 
-    torch.save(model.state_dict(), MODEL_OUT)
-    print(f"\nSaved trained PINN to {MODEL_OUT}")
+    if model_out:
+        os.makedirs(os.path.dirname(model_out), exist_ok=True)
+        torch.save(model.state_dict(), model_out)
+        if verbose:
+            print(f"\nSaved trained PINN to {model_out}")
+
+    return model
+
+def main():
+    train_pinn(D=0.1, model_out=DEFAULT_MODEL_OUT, n_epochs=5000, n_lbfgs_rounds=10)
 
 if __name__ == "__main__":
     main()
