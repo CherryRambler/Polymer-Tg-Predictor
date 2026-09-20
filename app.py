@@ -667,11 +667,12 @@ polymer_name = st.session_state.polymer_choice if st.session_state.polymer_choic
 # ---------------------------------------------------------------------------
 # Feature tabs
 # ---------------------------------------------------------------------------
-tab1, tab2, tab4, tab3 = st.tabs([
+tab1, tab2, tab4, tab3, tab5 = st.tabs([
     "🌡 Glass Transition Temperature",
     "💊 Drug Release",
     "⚡ Instant Prediction (Neural Operator)",
     "📖 About",
+    "📋 Batch",
 ])
 
 with tab1:
@@ -1077,6 +1078,45 @@ with tab3:
         "coefficient. See the GitHub README for full methodology and "
         "limitations."
     )
+    st.markdown('</div>', unsafe_allow_html=True)
+
+with tab5:
+    st.markdown('<div class="ppp-card">', unsafe_allow_html=True)
+    st.markdown('<p class="ppp-card-title">📋 Batch Tg prediction</p>', unsafe_allow_html=True)
+    st.write("Paste multiple SMILES strings, one per line, to predict Tg for all of them at once.")
+
+    batch_input = st.text_area(
+        "SMILES (one per line)",
+        value="CC(c1ccccc1)C\nCC\nCC(C)(C(=O)OC)C",
+        height=150,
+        label_visibility="collapsed",
+    )
+
+    if st.button("Predict all", key="batch_button"):
+        model = load_tg_model()
+        lines = [line.strip() for line in batch_input.split("\n") if line.strip()]
+
+        results = []
+        for smi in lines:
+            X = featurize_smiles(smi)
+            if X is None:
+                results.append({"SMILES": smi, "Predicted Tg (°C)": None, "Status": "Invalid SMILES"})
+            else:
+                pred = model.predict(X)[0]
+                results.append({"SMILES": smi, "Predicted Tg (°C)": round(float(pred), 1), "Status": "OK"})
+
+        results_df = pd.DataFrame(results)
+        st.dataframe(results_df, width="stretch")
+
+        n_valid = (results_df["Status"] == "OK").sum()
+        n_invalid = len(results_df) - n_valid
+        if n_invalid > 0:
+            st.warning(f"{n_invalid} SMILES could not be parsed and were skipped.")
+        st.success(f"Predicted Tg for {n_valid} polymers.")
+
+        csv = results_df.to_csv(index=False).encode("utf-8")
+        st.download_button("Download results as CSV", csv, "tg_predictions.csv", "text/csv")
+
     st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown(

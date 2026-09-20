@@ -19,10 +19,16 @@ def validate_smiles(smiles: str) -> bool:
     Try to parse a SMILES string into an RDKit molecule object.
     Chem.MolFromSmiles returns None if parsing fails (invalid chemistry
     or malformed string) rather than raising an error — so we explicitly
-    check for None.
+    check for None. We also reject empty/whitespace-only strings and any
+    string containing whitespace: RDKit silently truncates at the first
+    space instead of failing, so "CC C" would otherwise parse as "CC".
     """
+    if not smiles or not smiles.strip():
+        return False
+    if any(c.isspace() for c in smiles):
+        return False
     mol = Chem.MolFromSmiles(smiles)
-    return mol is not None
+    return mol is not None and mol.GetNumAtoms() > 0
 
 def main():
     df = pd.read_csv(RAW_PATH)
