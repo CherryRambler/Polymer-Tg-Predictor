@@ -146,6 +146,52 @@ not yet predicted from polymer structure. Connecting Phase 1/2's
 structure-to-property models to this PINN is a natural next step but
 requires a diffusion-coefficient dataset, which we don't yet have.
 
+## Rigor checks
+
+Two follow-up checks were run to test whether our reported metrics and
+modeling choices actually hold up under more scrutiny.
+
+### Scaffold-split evaluation
+
+Our original Phase 1/2 metrics used random cross-validation splits. A
+random split can let structurally near-identical polymers land in both
+train and test (e.g. Poly(methyl methacrylate) and Poly(ethyl
+methacrylate) differ by one substituent) -- letting the model succeed by
+near-matching rather than genuinely generalizing.
+
+We re-evaluated using a **scaffold split** (`src/phase1_baseline/scaffold_split_eval.py`):
+grouping polymers by their Murcko scaffold (core ring/framework
+structure) and ensuring every polymer sharing a scaffold stays entirely
+within train OR test, never split across both.
+
+| Split method | MAE | R2 |
+|---|---|---|
+| Random split (original) | 27.5°C | 0.87 |
+| **Scaffold split** | **39.7°C** | **0.772** |
+
+3,115 unique scaffolds were found across 7,363 polymers, confirming
+random splits were indeed letting related structures leak across
+train/test. The scaffold-split numbers above are the more honest measure
+of how well the model generalizes to genuinely novel polymer structures
+-- the original numbers were not wrong, but they were measuring an easier
+task than true generalization.
+
+### Ensemble weighting check
+
+Our Phase 2 ensemble averages XGBoost and GNN predictions 50/50. Since
+XGBoost was individually somewhat more accurate (29.3°C vs GNN's 29.6°C
+MAE standalone), we tested whether a different blend weight would beat a
+flat average (`src/analysis/learned_ensemble.py`), searching weights from
+0 (all GNN) to 1 (all XGBoost) in steps of 0.05.
+
+**Result: alpha=0.50 (the original 50/50 split) was confirmed as the
+optimal weight**, with a smooth, single minimum at that exact point (MAE
+degrades steadily moving in either direction). This shows the ensemble's
+benefit comes from how the two models' *errors correlate*, not simply
+from weighting the individually-stronger model more -- a real, if modest,
+piece of evidence that the original ensemble design was sound rather than
+an arbitrary default.
+
 ## Known limitations
 
 - A handful of Phase 1/2 predictions remain badly wrong (150-300°C error),
