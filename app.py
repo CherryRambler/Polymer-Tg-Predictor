@@ -19,7 +19,13 @@ import pandas as pd
 import torch
 import joblib
 from rdkit import Chem
-from rdkit.Chem import rdFingerprintGenerator, Draw
+from rdkit.Chem import rdFingerprintGenerator
+
+DRAW_AVAILABLE = True
+try:
+    from rdkit.Chem import Draw
+except ImportError:
+    DRAW_AVAILABLE = False
 import matplotlib.pyplot as plt
 import sys
 import os
