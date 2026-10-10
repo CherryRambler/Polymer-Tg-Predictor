@@ -1,0 +1,224 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1060 1012" width="1060" height="1012" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+<title>Polymer-Tg-Predictor architecture</title>
+<style>.n1{font-size:11.5px;font-weight:600}.n2{font-size:10px;fill:#64748b}.gt{font-size:12.5px;font-weight:700}.el{font-size:10px;fill:#475569;stroke:#ffffff;stroke-width:4px;stroke-linejoin:round;paint-order:stroke}.e{fill:none;stroke:#64748b;stroke-width:1.4}.d{stroke-dasharray:5 4}.lg{font-size:10.5px;fill:#334155}</style>
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker></defs>
+<rect x="0" y="0" width="1060" height="1012" rx="10" fill="#ffffff"/>
+<rect x="12" y="12" width="210" height="560" rx="10" fill="#eff6ff" fill-opacity="0.55" stroke="#2563eb" stroke-width="1.3"/>
+<text class="gt" x="22" y="29" fill="#2563eb">1 · Tg data pipeline</text>
+<rect x="258" y="12" width="430" height="206" rx="10" fill="#faf5ff" fill-opacity="0.55" stroke="#9333ea" stroke-width="1.3"/>
+<text class="gt" x="268" y="29" fill="#9333ea">4 · Tg evaluation</text>
+<rect x="258" y="232" width="430" height="340" rx="10" fill="#f0fdf4" fill-opacity="0.55" stroke="#16a34a" stroke-width="1.3"/>
+<text class="gt" x="268" y="249" fill="#16a34a">2 · Tg models</text>
+<rect x="12" y="600" width="446" height="400" rx="10" fill="#fff7ed" fill-opacity="0.55" stroke="#ea580c" stroke-width="1.3"/>
+<text class="gt" x="22" y="617" fill="#ea580c">3 · Diffusion models</text>
+<rect x="488" y="664" width="200" height="206" rx="10" fill="#faf5ff" fill-opacity="0.55" stroke="#9333ea" stroke-width="1.3"/>
+<text class="gt" x="498" y="681" fill="#9333ea">4 · Diffusion evaluation</text>
+<rect x="720" y="300" width="328" height="700" rx="10" fill="#fdf2f8" fill-opacity="0.55" stroke="#db2777" stroke-width="1.3"/>
+<text class="gt" x="730" y="317" fill="#db2777">5 · Streamlit app (app.py)</text>
+<path class="e" d="M446,356 L454,356"/>
+<path class="e d" d="M120,104 L120,80" marker-end="url(#ah)"/>
+<path class="e" d="M120,144 L120,168" marker-end="url(#ah)"/>
+<path class="e" d="M120,208 L120,260" marker-end="url(#ah)"/>
+<path class="e" d="M120,300 L120,336" marker-end="url(#ah)"/>
+<path class="e" d="M120,312 L22,312 L22,476 L32,476" marker-end="url(#ah)"/>
+<path class="e" d="M208,280 L240,280 L240,124 L270,124" marker-end="url(#ah)"/>
+<path class="e" d="M208,356 L270,356" marker-end="url(#ah)"/>
+<path class="e" d="M208,476 L270,476" marker-end="url(#ah)"/>
+<path class="e" d="M358,522 L358,496" marker-end="url(#ah)"/>
+<path class="e" d="M462,356 L500,356" marker-end="url(#ah)"/>
+<path class="e" d="M446,476 L500,476" marker-end="url(#ah)"/>
+<path class="e d" d="M358,336 L358,272 L500,272" marker-end="url(#ah)"/>
+<path class="e d" d="M446,466 L458,466 L458,288 L500,288" marker-end="url(#ah)"/>
+<path class="e d" d="M588,260 L588,208" marker-end="url(#ah)"/>
+<path class="e d" d="M676,280 L702,280 L702,124 L676,124" marker-end="url(#ah)"/>
+<path class="e d" d="M702,124 L702,60 L676,60" marker-end="url(#ah)"/>
+<path class="e" d="M676,356 L736,356" marker-end="url(#ah)"/>
+<path class="e" d="M676,476 L736,476" marker-end="url(#ah)"/>
+<path class="e" d="M806,401 L806,376" marker-end="url(#ah)"/>
+<path class="e" d="M806,431 L806,456" marker-end="url(#ah)"/>
+<path class="e" d="M876,356 L978,356 L978,396" marker-end="url(#ah)"/>
+<path class="e" d="M876,476 L978,476 L978,436" marker-end="url(#ah)"/>
+<path class="e" d="M208,648 L270,648" marker-end="url(#ah)"/>
+<path class="e" d="M358,668 L358,692" marker-end="url(#ah)"/>
+<path class="e" d="M446,648 L736,648" marker-end="url(#ah)"/>
+<path class="e" d="M358,796 L358,820" marker-end="url(#ah)"/>
+<path class="e" d="M358,860 L358,884" marker-end="url(#ah)"/>
+<path class="e" d="M208,904 L270,904" marker-end="url(#ah)"/>
+<path class="e" d="M358,924 L358,948" marker-end="url(#ah)"/>
+<path class="e" d="M446,976 L736,976" marker-end="url(#ah)"/>
+<path class="e" d="M446,712 L500,712" marker-end="url(#ah)"/>
+<path class="e" d="M546,732 L546,768 L446,768" marker-end="url(#ah)"/>
+<path class="e" d="M446,960 L560,960 L560,860" marker-end="url(#ah)"/>
+<path class="e" d="M606,820 L606,784 L446,784" marker-end="url(#ah)"/>
+<path class="e d" d="M676,840 L706,840 L706,958 L736,958" marker-end="url(#ah)"/>
+<path class="e" d="M806,788 L806,668" marker-end="url(#ah)"/>
+<path class="e" d="M806,828 L806,948" marker-end="url(#ah)"/>
+<path class="e" d="M876,648 L978,648 L978,788" marker-end="url(#ah)"/>
+<path class="e" d="M876,968 L978,968 L978,828" marker-end="url(#ah)"/>
+<circle cx="120" cy="312" r="2.6" fill="#64748b"/>
+<circle cx="702" cy="124" r="2.6" fill="#64748b"/>
+<rect x="32" y="40.0" width="176" height="40" rx="6" fill="#ffffff" stroke="#2563eb" stroke-width="1.2"/>
+<text class="n1" x="120.0" y="57" text-anchor="middle" fill="#1e3a8a">validate_data.py</text>
+<text class="n2" x="120.0" y="71" text-anchor="middle">SMILES parse check</text>
+<rect x="32" y="104.0" width="176" height="40" rx="6" fill="#ffffff" stroke="#2563eb" stroke-width="1.2"/>
+<text class="n1" x="120.0" y="121" text-anchor="middle" fill="#1e3a8a">get_data.py</text>
+<text class="n2" x="120.0" y="135" text-anchor="middle">convert PolyMetriX CSV</text>
+<rect x="32" y="168.0" width="176" height="40" rx="6" fill="#ffffff" stroke="#2563eb" stroke-width="1.2"/>
+<text class="n1" x="120.0" y="185" text-anchor="middle" fill="#1e3a8a">filter_reliable_data.py</text>
+<text class="n2" x="120.0" y="199" text-anchor="middle">drop 'red' rows</text>
+<path d="M32,260.0 H199 L208,269.0 V300.0 H32 Z" fill="#ffffff" stroke="#2563eb" stroke-width="1.2"/>
+<path d="M199,260.0 V269.0 H208" fill="none" stroke="#2563eb" stroke-width="1"/>
+<text class="n1" x="120.0" y="277" text-anchor="middle" fill="#1e3a8a">polymer_tg_polymetrix</text>
+<text class="n1" x="120.0" y="291" text-anchor="middle" fill="#1e3a8a">_reliable.csv</text>
+<rect x="32" y="336.0" width="176" height="40" rx="6" fill="#ffffff" stroke="#2563eb" stroke-width="1.2"/>
+<text class="n1" x="120.0" y="353" text-anchor="middle" fill="#1e3a8a">featurize.py</text>
+<text class="n2" x="120.0" y="367" text-anchor="middle">Morgan fingerprints</text>
+<rect x="32" y="456.0" width="176" height="40" rx="6" fill="#ffffff" stroke="#2563eb" stroke-width="1.2"/>
+<text class="n1" x="120.0" y="473" text-anchor="middle" fill="#1e3a8a">gnn_data.py</text>
+<text class="n2" x="120.0" y="487" text-anchor="middle">molecular graphs</text>
+<rect x="270" y="104.0" width="176" height="40" rx="6" fill="#ffffff" stroke="#9333ea" stroke-width="1.2"/>
+<text class="n1" x="358.0" y="121" text-anchor="middle" fill="#581c87">scaffold_split_eval.py</text>
+<text class="n2" x="358.0" y="135" text-anchor="middle">Murcko scaffold CV</text>
+<rect x="500" y="40.0" width="176" height="40" rx="6" fill="#ffffff" stroke="#9333ea" stroke-width="1.2"/>
+<text class="n1" x="588.0" y="57" text-anchor="middle" fill="#581c87">compare_phase1_vs_gnn.py</text>
+<text class="n2" x="588.0" y="71" text-anchor="middle">same 737 test polymers</text>
+<rect x="500" y="104.0" width="176" height="40" rx="6" fill="#ffffff" stroke="#9333ea" stroke-width="1.2"/>
+<text class="n1" x="588.0" y="121" text-anchor="middle" fill="#581c87">ensemble.py</text>
+<text class="n2" x="588.0" y="135" text-anchor="middle">50/50 average</text>
+<rect x="500" y="168.0" width="176" height="40" rx="6" fill="#ffffff" stroke="#9333ea" stroke-width="1.2"/>
+<text class="n1" x="588.0" y="185" text-anchor="middle" fill="#581c87">learned_ensemble.py</text>
+<text class="n2" x="588.0" y="199" text-anchor="middle">blend-weight search</text>
+<path d="M500,260.0 H667 L676,269.0 V300.0 H500 Z" fill="#ffffff" stroke="#16a34a" stroke-width="1.2"/>
+<path d="M667,260.0 V269.0 H676" fill="none" stroke="#16a34a" stroke-width="1"/>
+<text class="n1" x="588.0" y="277" text-anchor="middle" fill="#14532d">cv_predictions.csv</text>
+<text class="n1" x="588.0" y="291" text-anchor="middle" fill="#14532d">gnn_test_predictions.csv</text>
+<rect x="270" y="336.0" width="176" height="40" rx="6" fill="#ffffff" stroke="#16a34a" stroke-width="1.2"/>
+<text class="n1" x="358.0" y="353" text-anchor="middle" fill="#14532d">train_baseline.py</text>
+<text class="n2" x="358.0" y="367" text-anchor="middle">XGBoost + RF, 5-fold CV</text>
+<path d="M500,336.0 H667 L676,345.0 V376.0 H500 Z" fill="#ffffff" stroke="#16a34a" stroke-width="1.2"/>
+<path d="M667,336.0 V345.0 H676" fill="none" stroke="#16a34a" stroke-width="1"/>
+<text class="n1" x="588.0" y="360" text-anchor="middle" fill="#14532d">xgboost_tg.joblib</text>
+<rect x="270" y="456.0" width="176" height="40" rx="6" fill="#ffffff" stroke="#16a34a" stroke-width="1.2"/>
+<text class="n1" x="358.0" y="473" text-anchor="middle" fill="#14532d">gnn_train.py</text>
+<text class="n2" x="358.0" y="487" text-anchor="middle">80/10/10 split</text>
+<path d="M500,456.0 H667 L676,465.0 V496.0 H500 Z" fill="#ffffff" stroke="#16a34a" stroke-width="1.2"/>
+<path d="M667,456.0 V465.0 H676" fill="none" stroke="#16a34a" stroke-width="1"/>
+<text class="n1" x="588.0" y="480" text-anchor="middle" fill="#14532d">gnn_tg.pt</text>
+<rect x="270" y="522.0" width="176" height="40" rx="6" fill="#ffffff" stroke="#16a34a" stroke-width="1.2"/>
+<text class="n1" x="358.0" y="539" text-anchor="middle" fill="#14532d">gnn_model.py</text>
+<text class="n2" x="358.0" y="553" text-anchor="middle">GINEConv architecture</text>
+<rect x="32" y="628.0" width="176" height="40" rx="6" fill="#ffffff" stroke="#ea580c" stroke-width="1.2"/>
+<text class="n1" x="120.0" y="645" text-anchor="middle" fill="#7c2d12">pinn_model.py</text>
+<text class="n2" x="120.0" y="659" text-anchor="middle">tanh MLP (x, t) → C</text>
+<rect x="270" y="628.0" width="176" height="40" rx="6" fill="#ffffff" stroke="#ea580c" stroke-width="1.2"/>
+<text class="n1" x="358.0" y="645" text-anchor="middle" fill="#7c2d12">pinn_train.py</text>
+<text class="n2" x="358.0" y="659" text-anchor="middle">Adam + L-BFGS</text>
+<path d="M270,692.0 H437 L446,701.0 V732.0 H270 Z" fill="#ffffff" stroke="#ea580c" stroke-width="1.2"/>
+<path d="M437,692.0 V701.0 H446" fill="none" stroke="#ea580c" stroke-width="1"/>
+<text class="n1" x="358.0" y="709" text-anchor="middle" fill="#7c2d12">pinn_diffusion.pt</text>
+<text class="n2" x="358.0" y="723" text-anchor="middle">offline run, D = 0.1</text>
+<rect x="270" y="756.0" width="176" height="40" rx="6" fill="#ffffff" stroke="#ea580c" stroke-width="1.2"/>
+<text class="n1" x="358.0" y="773" text-anchor="middle" fill="#7c2d12">pinn_analytical.py</text>
+<text class="n2" x="358.0" y="787" text-anchor="middle">exact solution</text>
+<rect x="270" y="820.0" width="176" height="40" rx="6" fill="#ffffff" stroke="#ea580c" stroke-width="1.2"/>
+<text class="n1" x="358.0" y="837" text-anchor="middle" fill="#7c2d12">generate_training_data.py</text>
+<text class="n2" x="358.0" y="851" text-anchor="middle">100 D values, 25×25 grid</text>
+<rect x="32" y="884.0" width="176" height="40" rx="6" fill="#ffffff" stroke="#ea580c" stroke-width="1.2"/>
+<text class="n1" x="120.0" y="901" text-anchor="middle" fill="#7c2d12">deeponet_model.py</text>
+<text class="n2" x="120.0" y="915" text-anchor="middle">branch (D) + trunk (x, t)</text>
+<rect x="270" y="884.0" width="176" height="40" rx="6" fill="#ffffff" stroke="#ea580c" stroke-width="1.2"/>
+<text class="n1" x="358.0" y="901" text-anchor="middle" fill="#7c2d12">train_deeponet.py</text>
+<text class="n2" x="358.0" y="915" text-anchor="middle">Adam, 600 epochs</text>
+<path d="M270,948.0 H437 L446,957.0 V988.0 H270 Z" fill="#ffffff" stroke="#ea580c" stroke-width="1.2"/>
+<path d="M437,948.0 V957.0 H446" fill="none" stroke="#ea580c" stroke-width="1"/>
+<text class="n1" x="358.0" y="965" text-anchor="middle" fill="#7c2d12">deeponet_diffusion.pt</text>
+<text class="n2" x="358.0" y="979" text-anchor="middle">DeepONet weights</text>
+<rect x="500" y="692.0" width="176" height="40" rx="6" fill="#ffffff" stroke="#9333ea" stroke-width="1.2"/>
+<text class="n1" x="588.0" y="709" text-anchor="middle" fill="#581c87">pinn_evaluate.py</text>
+<text class="n2" x="588.0" y="723" text-anchor="middle">PINN vs exact, D = 0.1</text>
+<rect x="500" y="820.0" width="176" height="40" rx="6" fill="#ffffff" stroke="#9333ea" stroke-width="1.2"/>
+<text class="n1" x="588.0" y="837" text-anchor="middle" fill="#581c87">deeponet_evaluate.py</text>
+<text class="n2" x="588.0" y="851" text-anchor="middle">8 held-out D values</text>
+<rect x="736" y="336.0" width="140" height="40" rx="6" fill="#ffffff" stroke="#db2777" stroke-width="1.2"/>
+<text class="n1" x="806.0" y="360" text-anchor="middle" fill="#831843">XGBoost Tg</text>
+<rect x="736" y="401.0" width="140" height="30" rx="15.0" fill="#ffffff" stroke="#db2777" stroke-width="1.2"/>
+<text class="n1" x="806.0" y="420" text-anchor="middle" fill="#831843">SMILES input</text>
+<rect x="736" y="456.0" width="140" height="40" rx="6" fill="#ffffff" stroke="#db2777" stroke-width="1.2"/>
+<text class="n1" x="806.0" y="473" text-anchor="middle" fill="#831843">GNN Tg</text>
+<text class="n2" x="806.0" y="487" text-anchor="middle">gnn_inference.py</text>
+<rect x="920" y="396.0" width="116" height="40" rx="6" fill="#ffffff" stroke="#db2777" stroke-width="2.2"/>
+<text class="n1" x="978.0" y="413" text-anchor="middle" fill="#831843">Ensemble Tg</text>
+<text class="n2" x="978.0" y="427" text-anchor="middle">(XGB + GNN) / 2</text>
+<rect x="736" y="628.0" width="140" height="40" rx="6" fill="#ffffff" stroke="#db2777" stroke-width="1.2"/>
+<text class="n1" x="806.0" y="645" text-anchor="middle" fill="#831843">PINN</text>
+<text class="n2" x="806.0" y="659" text-anchor="middle">trained live</text>
+<rect x="736" y="788.0" width="140" height="40" rx="20.0" fill="#ffffff" stroke="#db2777" stroke-width="1.2"/>
+<text class="n1" x="806.0" y="805" text-anchor="middle" fill="#831843">D slider</text>
+<text class="n2" x="806.0" y="819" text-anchor="middle">manual, 0.01–1.0</text>
+<rect x="736" y="948.0" width="140" height="40" rx="6" fill="#ffffff" stroke="#db2777" stroke-width="1.2"/>
+<text class="n1" x="806.0" y="965" text-anchor="middle" fill="#831843">DeepONet</text>
+<text class="n2" x="806.0" y="979" text-anchor="middle">instant</text>
+<rect x="920" y="788.0" width="116" height="40" rx="6" fill="#ffffff" stroke="#db2777" stroke-width="2.2"/>
+<text class="n1" x="978.0" y="812" text-anchor="middle" fill="#831843">Release curve</text>
+<text class="el" x="126" y="96" text-anchor="start">checked by</text>
+<text class="el" x="126" y="160" text-anchor="start">writes CSV for</text>
+<text class="el" x="126" y="238" text-anchor="start">writes</text>
+<text class="el" x="126" y="330" text-anchor="start">feeds</text>
+<text class="el" x="264" y="204" text-anchor="start">re-splits</text>
+<text class="el" x="239" y="350" text-anchor="middle">feeds</text>
+<text class="el" x="239" y="470" text-anchor="middle">feeds</text>
+<text class="el" x="364" y="513" text-anchor="start">defines</text>
+<text class="el" x="481" y="350" text-anchor="middle">saves</text>
+<text class="el" x="481" y="490" text-anchor="middle">saves</text>
+<text class="el" x="429" y="266" text-anchor="middle">saved predictions</text>
+<text class="el" x="452" y="420" text-anchor="end">saved predictions</text>
+<text class="el" x="594" y="238" text-anchor="start">read by</text>
+<text class="el" x="696" y="96" text-anchor="end">read by</text>
+<text class="el" x="706" y="350" text-anchor="middle">loads</text>
+<text class="el" x="706" y="470" text-anchor="middle">loads</text>
+<text class="el" x="812" y="392" text-anchor="start">featurizes</text>
+<text class="el" x="812" y="447" text-anchor="start">graphs</text>
+<text class="el" x="927" y="350" text-anchor="middle">averages</text>
+<text class="el" x="927" y="490" text-anchor="middle">averages</text>
+<text class="el" x="239" y="642" text-anchor="middle">defines</text>
+<text class="el" x="364" y="684" text-anchor="start">saves</text>
+<text class="el" x="591" y="642" text-anchor="middle">trains live</text>
+<text class="el" x="364" y="812" text-anchor="start">labels</text>
+<text class="el" x="364" y="876" text-anchor="start">feeds</text>
+<text class="el" x="239" y="898" text-anchor="middle">defines</text>
+<text class="el" x="364" y="940" text-anchor="start">saves</text>
+<text class="el" x="640" y="970" text-anchor="middle">loads</text>
+<text class="el" x="473" y="706" text-anchor="middle">loads</text>
+<text class="el" x="496" y="762" text-anchor="middle">compares against</text>
+<text class="el" x="566" y="916" text-anchor="start">loads</text>
+<text class="el" x="526" y="798" text-anchor="middle">compares against</text>
+<text class="el" x="700" y="900" text-anchor="end">reports MAE / R²</text>
+<text class="el" x="812" y="732" text-anchor="start">sets D</text>
+<text class="el" x="812" y="892" text-anchor="start">sets D</text>
+<text class="el" x="927" y="642" text-anchor="middle">plots</text>
+<text class="el" x="927" y="982" text-anchor="middle">plots</text>
+<rect x="740" y="24" width="300" height="252" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
+<text class="gt" x="752" y="44" fill="#334155">Legend</text>
+<rect x="754" y="58" width="58" height="20" rx="5" fill="#ffffff" stroke="#64748b"/>
+<text class="lg" x="826" y="72">script / module</text>
+<path d="M754,88 H804 L812,96 V108 H754 Z" fill="#ffffff" stroke="#64748b"/><path d="M804,88 V96 H812" fill="none" stroke="#64748b"/>
+<text class="lg" x="826" y="102">saved file (CSV, weights)</text>
+<rect x="754" y="118" width="58" height="20" rx="10" fill="#ffffff" stroke="#64748b"/>
+<text class="lg" x="826" y="132">user input in the app</text>
+<rect x="754" y="148" width="58" height="20" rx="5" fill="#ffffff" stroke="#64748b" stroke-width="2.2"/>
+<text class="lg" x="826" y="162">what the app shows</text>
+<path class="e" d="M754,188 H812" marker-end="url(#ah)"/>
+<text class="lg" x="826" y="192">code / data flow</text>
+<path class="e d" d="M754,218 H812" marker-end="url(#ah)"/>
+<text class="lg" x="826" y="222">offline read of a saved file, or a check</text>
+<rect x="754" y="242" width="10" height="10" rx="2" fill="#eff6ff" stroke="#2563eb"/>
+<text class="lg" x="768" y="251">data</text>
+<rect x="806" y="242" width="10" height="10" rx="2" fill="#f0fdf4" stroke="#16a34a"/>
+<text class="lg" x="820" y="251">Tg</text>
+<rect x="846" y="242" width="10" height="10" rx="2" fill="#fff7ed" stroke="#ea580c"/>
+<text class="lg" x="860" y="251">diffusion</text>
+<rect x="928" y="242" width="10" height="10" rx="2" fill="#faf5ff" stroke="#9333ea"/>
+<text class="lg" x="942" y="251">eval</text>
+<rect x="980" y="242" width="10" height="10" rx="2" fill="#fdf2f8" stroke="#db2777"/>
+<text class="lg" x="994" y="251">app</text>
+</svg>

@@ -79,6 +79,16 @@ source, unverified" -- NOT "known wrong" -- so we keep it. "Red" (4 rows)
 means "conflicting values across multiple sources" -- we drop only this
 category via `src/phase1_baseline/filter_reliable_data.py`.
 
+## Architecture
+
+![Architecture: data pipeline, Tg models, diffusion models, evaluation and the Streamlit app](docs/architecture.svg)
+
+Each model goes training script → saved weights → app. Dashed arrows are
+offline scripts reading saved files. In the app, D comes from the slider.
+
+The diagram is generated: edit `docs/gen_architecture.py`, then run
+`python docs/gen_architecture.py` to rewrite `docs/architecture.svg`.
+
 ## Project structure
 
 ```
@@ -87,6 +97,7 @@ Polymer-Tg-Predictor/
 ├── data/
 │   ├── raw/                     # original downloaded/converted data
 │   └── processed/               # featurized data (fingerprints, graphs)
+├── docs/                        # architecture diagram + its generator script
 ├── src/
 │   ├── phase1_baseline/         # classical ML: data prep, featurization, RF/XGBoost, scaffold split
 │   ├── phase2_gnn/              # graph neural network
