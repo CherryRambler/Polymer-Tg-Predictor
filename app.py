@@ -14,6 +14,7 @@ Run locally:
 # pyrefly: ignore [missing-import]
 import streamlit as st
 # pyrefly: ignore [missing-import]
+import streamlit.components.v1 as components
 import json
 import numpy as np
 import pandas as pd
@@ -96,53 +97,72 @@ CUSTOM_LABEL = "Custom / paste your own SMILES"
 # (which never actually wraps the widgets in between).
 # ---------------------------------------------------------------------------
 TOKENS = {
-    # Surfaces (graphite)
-    "bg": "#0C0E0F",
-    "bg-2": "#111415",
-    "surface": "#161A1B",
-    "surface-2": "#1C2123",
-    "border": "#2A3134",
-    "border-strong": "#3A4447",
+    # Surfaces
+    "bg": "#080B14",
+    "bg-2": "#0D1220",
+    "surface": "#111827",
+    "surface-2": "#151D2E",
+    "border": "#263449",
+    "border-strong": "#33476A",
     # Accents
-    "accent": "#2DD4A4",
-    "accent-2": "#F59E0B",
-    "accent-2-soft": "#FBBF24",
+    "cyan": "#22D3EE",
+    "violet": "#8B5CF6",
+    "violet-soft": "#A78BFA",
+    "amber": "#FBBF24",
     # Text
-    "text": "#E8ECEA",
-    "text-muted": "#9AA5A1",
-    "text-faint": "#66706C",
+    "text": "#F1F5F9",
+    "text-muted": "#94A3B8",
+    "text-faint": "#64748B",
     # Status
-    "success": "#4ADE80",
-    "error": "#F87171",
+    "success": "#34D399",
+    "error": "#FB7185",
     # Shape
-    "radius-sm": "6px",
-    "radius": "10px",
-    "radius-lg": "12px",
+    "radius-sm": "8px",
+    "radius": "12px",
+    "radius-lg": "16px",
     # Type
-    "font-sans": "'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif",
-    "font-mono": "'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace",
+    "font-sans": "'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif",
+    "font-mono": "'Geist Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace",
 }
 
 # Chart series colors -- shared by every matplotlib figure in the app.
-CURVE_PRIMARY = TOKENS["accent"]
-CURVE_SECONDARY = TOKENS["accent-2-soft"]
+CURVE_PRIMARY = TOKENS["cyan"]
+CURVE_SECONDARY = TOKENS["violet-soft"]
 
 _CSS = """
-/* ---------- Page canvas ---------- */
-.stApp {
-    background:
-        radial-gradient(1000px 420px at 50% -12%, rgba(45, 212, 164, 0.06), transparent 65%),
-        var(--pil-bg);
-    font-family: var(--pil-font-sans);
-}
+/* ---------- Page canvas + full-viewport background layer ---------- */
+/* The Quantum Swarm iframe (quantum_background) is pinned to the viewport
+   behind everything; it ignores the pointer, so content stays fully usable. */
+.stApp { background: var(--pil-bg); }
 [data-testid="stAppViewContainer"], [data-testid="stMain"], [data-testid="stHeader"] {
     background: transparent;
 }
+.st-key-pil-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+.st-key-pil-bg iframe {
+    position: fixed;
+    inset: 0;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    border: 0;
+    pointer-events: none;
+}
+/* Collapse the layout slot the background occupies in the page flow */
+[data-testid="stElementContainer"]:has(> .st-key-pil-bg),
+.stVerticalBlock > div:has(> .st-key-pil-bg) { margin: 0; height: 0; min-height: 0; }
+[data-testid="stMain"] { position: relative; z-index: 1; }
 [data-testid="stMainBlockContainer"] {
-    max-width: 1120px;
-    padding: 1.25rem 1.5rem 3rem;
+    max-width: 1160px;
+    padding: 1rem 1.5rem 3rem;
 }
 #MainMenu, footer, header { visibility: hidden; }
+/* Text that sits straight on the animated background gets a soft halo */
+.pil-on-bg { text-shadow: 0 1px 16px rgba(8, 11, 20, 0.9), 0 0 2px rgba(8, 11, 20, 0.8); }
 
 /* ---------- Typography primitives ---------- */
 .pil-mono { font-family: var(--pil-font-mono); }
@@ -152,7 +172,7 @@ _CSS = """
     font-weight: 500;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--pil-accent);
+    color: var(--pil-cyan);
 }
 .pil-label {
     font-size: 0.7rem;
@@ -161,40 +181,6 @@ _CSS = """
     text-transform: uppercase;
     color: var(--pil-text-muted);
     margin: 0.2rem 0 0.1rem 1px;
-}
-
-/* ---------- Hero ---------- */
-.pil-hero {
-    position: relative;
-    overflow: hidden;
-    text-align: center;
-    padding: 2.4rem 1.5rem 2rem;
-    margin-bottom: 0.6rem;
-    border: 1px solid var(--pil-border);
-    border-radius: var(--pil-radius-lg);
-    background:
-        linear-gradient(90deg, transparent, rgba(45, 212, 164, 0.8), rgba(245, 158, 11, 0.8), transparent) top / 100% 1px no-repeat,
-        repeating-linear-gradient(0deg, rgba(154, 165, 161, 0.05) 0 1px, transparent 1px 32px),
-        repeating-linear-gradient(90deg, rgba(154, 165, 161, 0.05) 0 1px, transparent 1px 32px),
-        var(--pil-bg-2);
-}
-.pil-hero-art { display: flex; justify-content: center; margin-bottom: 0.6rem; }
-.pil-hero-art svg { width: 56px; height: 56px; }
-.pil-hero-title {
-    font-family: var(--pil-font-sans);
-    font-size: 2.6rem;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    line-height: 1.1;
-    color: var(--pil-text);
-    margin: 0.4rem 0 0.6rem;
-    padding: 0;
-}
-.pil-hero-sub {
-    font-size: 0.98rem;
-    color: var(--pil-text-muted);
-    max-width: 44ch;
-    margin: 0 auto;
 }
 
 /* ---------- Model status strip (under the hero) ---------- */
@@ -213,7 +199,7 @@ _CSS = """
     font-size: 0.7rem;
     letter-spacing: 0.04em;
     color: var(--pil-text-muted);
-    background: rgba(22, 26, 27, 0.7);
+    background: rgba(17, 24, 39, 0.7);
     border: 1px solid var(--pil-border);
     border-radius: 999px;
     padding: 0.28rem 0.7rem 0.28rem 0.55rem;
@@ -224,14 +210,14 @@ _CSS = """
     height: 7px;
     border-radius: 50%;
     background: var(--pil-success);
-    box-shadow: 0 0 8px rgba(74, 222, 128, 0.6);
+    box-shadow: 0 0 8px rgba(52, 211, 153, 0.6);
 }
 .pil-status-item.ok .dot::after {
     content: "";
     position: absolute;
     inset: -3px;
     border-radius: 50%;
-    border: 1px solid rgba(74, 222, 128, 0.55);
+    border: 1px solid rgba(52, 211, 153, 0.55);
     animation: pil-pulse 2.6s ease-out infinite;
 }
 .pil-status-item.off { color: var(--pil-text-faint); }
@@ -260,7 +246,7 @@ _CSS = """
     border-radius: var(--pil-radius);
     border: 1px solid var(--pil-border);
     background:
-        radial-gradient(circle at 30% 20%, rgba(45, 212, 164, 0.16), transparent 70%),
+        radial-gradient(circle at 30% 20%, rgba(34, 211, 238, 0.16), transparent 70%),
         var(--pil-surface);
 }
 .pil-section-title {
@@ -279,22 +265,26 @@ _CSS = """
     margin: 0;
 }
 
-/* ---------- Cards (native bordered containers) ---------- */
+/* ---------- Panels (native bordered containers) ----------
+   Each section gets its own translucent glass panel -- just enough contrast
+   to read text over the moving particles; never one card around the page. */
 [class*="st-key-pil-card-"], [class*="st-key-pil-accent-"] {
-    background: linear-gradient(180deg, rgba(28, 33, 35, 0.92), rgba(22, 26, 27, 0.92));
-    border-color: var(--pil-border) !important;
+    background: rgba(13, 18, 32, 0.68);
+    -webkit-backdrop-filter: blur(10px) saturate(120%);
+    backdrop-filter: blur(10px) saturate(120%);
+    border-color: rgba(51, 71, 106, 0.7) !important;
     border-radius: var(--pil-radius-lg) !important;
     padding: 1.2rem 1.3rem !important;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 14px 32px -18px rgba(0, 0, 0, 0.7);
     transition: border-color 0.2s ease;
 }
 [class*="st-key-pil-card-"]:hover { border-color: var(--pil-border-strong) !important; }
-/* Emphasized card: thin emerald->amber edge along the top */
+/* Emphasized panel: thin luminous cyan->violet edge along the top */
 [class*="st-key-pil-accent-"] {
     background:
-        linear-gradient(90deg, rgba(45, 212, 164, 0.7), rgba(245, 158, 11, 0.7)) top / 100% 1px no-repeat,
-        radial-gradient(600px 160px at 0% 0%, rgba(45, 212, 164, 0.06), transparent 70%),
-        linear-gradient(180deg, rgba(28, 33, 35, 0.95), rgba(22, 26, 27, 0.95));
+        linear-gradient(90deg, rgba(34, 211, 238, 0.7), rgba(139, 92, 246, 0.7)) top / 100% 1px no-repeat,
+        radial-gradient(600px 160px at 0% 0%, rgba(34, 211, 238, 0.06), transparent 70%),
+        rgba(13, 18, 32, 0.74);
     border-color: var(--pil-border-strong) !important;
 }
 .pil-card-head {
@@ -309,8 +299,8 @@ _CSS = """
     height: 8px;
     margin-top: 0.42rem;
     border-radius: 50%;
-    background: var(--pil-accent);
-    box-shadow: 0 0 0 3px rgba(45, 212, 164, 0.15), 0 0 10px rgba(45, 212, 164, 0.5);
+    background: var(--pil-cyan);
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15), 0 0 10px rgba(34, 211, 238, 0.5);
 }
 .pil-card-title {
     font-size: 0.98rem;
@@ -327,19 +317,19 @@ _CSS = """
 
 /* ---------- Buttons ---------- */
 [data-testid="stBaseButton-primary"] {
-    background: linear-gradient(135deg, #2DD4A4 0%, #5EEAC0 100%);
-    color: #04140E;
-    border: 1px solid rgba(45, 212, 164, 0.9);
+    background: linear-gradient(135deg, #22D3EE 0%, #38BDF8 100%);
+    color: #04121A;
+    border: 1px solid rgba(34, 211, 238, 0.9);
     font-weight: 600;
     min-height: 2.6rem;
-    box-shadow: 0 6px 20px -8px rgba(45, 212, 164, 0.55);
+    box-shadow: 0 6px 20px -8px rgba(34, 211, 238, 0.55);
     transition: box-shadow 0.18s ease, transform 0.18s ease, filter 0.18s ease;
 }
 [data-testid="stBaseButton-primary"]:hover {
-    color: #04140E;
-    border-color: #5EEAC0;
+    color: #04121A;
+    border-color: #67E8F9;
     filter: brightness(1.06);
-    box-shadow: 0 8px 26px -8px rgba(45, 212, 164, 0.75);
+    box-shadow: 0 8px 26px -8px rgba(34, 211, 238, 0.75);
     transform: translateY(-1px);
 }
 [data-testid="stBaseButton-primary"]:active { transform: translateY(0); }
@@ -359,12 +349,12 @@ _CSS = """
     transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
 }
 [data-testid="stBaseButton-secondary"]:hover {
-    border-color: rgba(45, 212, 164, 0.6);
-    color: #99F6D4;
-    background: #20282A;
+    border-color: rgba(34, 211, 238, 0.6);
+    color: #A5F3FC;
+    background: #17213A;
 }
 .stButton button:focus-visible, .stDownloadButton button:focus-visible {
-    outline: 2px solid var(--pil-accent);
+    outline: 2px solid var(--pil-cyan);
     outline-offset: 2px;
 }
 
@@ -379,10 +369,10 @@ _CSS = """
 .st-key-pil-chips button p { font-size: 0.8rem; }
 .st-key-pil-chips [data-testid="stBaseButton-primary"],
 .st-key-pil-chips [data-testid="stBaseButton-primary"]:hover {
-    background: rgba(45, 212, 164, 0.12);
-    color: #99F6D4;
-    border-color: rgba(45, 212, 164, 0.65);
-    box-shadow: 0 0 0 3px rgba(45, 212, 164, 0.08);
+    background: rgba(34, 211, 238, 0.12);
+    color: #A5F3FC;
+    border-color: rgba(34, 211, 238, 0.65);
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.08);
     transform: none;
     filter: none;
 }
@@ -394,7 +384,7 @@ _CSS = """
 }
 .stTextInput [data-baseweb="input"]:focus-within,
 .stTextArea [data-baseweb="textarea"]:focus-within {
-    box-shadow: 0 0 0 3px rgba(45, 212, 164, 0.16);
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.16);
 }
 /* SMILES are chemistry, not prose: monospace wherever they are typed */
 .st-key-smiles_value input, .st-key-pil-card-batch-input textarea {
@@ -405,7 +395,7 @@ _CSS = """
 /* ---------- Tabs: segmented navigation (ARIA roles: stable across versions) ---------- */
 .stTabs [role="tablist"] {
     gap: 0.25rem;
-    background: rgba(17, 20, 21, 0.85);
+    background: rgba(13, 18, 32, 0.85);
     border: 1px solid var(--pil-border);
     padding: 0.3rem;
     border-radius: var(--pil-radius);
@@ -422,19 +412,19 @@ _CSS = """
     transition: background 0.18s ease, color 0.18s ease;
 }
 .stTabs [role="tab"] p { font-size: 0.86rem; font-weight: 550; white-space: nowrap; }
-.stTabs [role="tab"]:hover { color: var(--pil-text); background: rgba(28, 33, 35, 0.8); }
+.stTabs [role="tab"]:hover { color: var(--pil-text); background: rgba(21, 29, 46, 0.8); }
 .stTabs [role="tab"][aria-selected="true"] {
     background: var(--pil-surface-2);
-    color: #99F6D4;
-    box-shadow: inset 0 0 0 1px var(--pil-border-strong), inset 0 -2px 0 var(--pil-accent);
+    color: #A5F3FC;
+    box-shadow: inset 0 0 0 1px var(--pil-border-strong), inset 0 -2px 0 var(--pil-cyan);
 }
-.stTabs [role="tab"][aria-selected="true"] p { color: #99F6D4; }
-.stTabs [role="tab"]:focus-visible { outline: 2px solid var(--pil-accent); outline-offset: 1px; }
+.stTabs [role="tab"][aria-selected="true"] p { color: #A5F3FC; }
+.stTabs [role="tab"]:focus-visible { outline: 2px solid var(--pil-cyan); outline-offset: 1px; }
 .stTabs [role="tabpanel"] { padding-top: 1rem; }
 
 /* ---------- Metrics, expanders, images ---------- */
 [data-testid="stMetric"] {
-    background: rgba(12, 14, 15, 0.55);
+    background: rgba(8, 11, 20, 0.55);
     border: 1px solid var(--pil-border);
     border-radius: var(--pil-radius);
     padding: 0.7rem 0.9rem;
@@ -454,7 +444,7 @@ _CSS = """
 [data-testid="stExpander"] details {
     border-color: var(--pil-border);
     border-radius: var(--pil-radius);
-    background: rgba(22, 26, 27, 0.6);
+    background: rgba(17, 24, 39, 0.6);
 }
 .st-key-pil-architecture [data-testid="stImage"] img { border-radius: 10px; }
 /* RDKit draws black-on-white PNGs. Display-only dark rendering: invert +
@@ -464,7 +454,7 @@ _CSS = """
     border: 1px solid var(--pil-border);
     border-radius: var(--pil-radius);
     background:
-        radial-gradient(circle at 50% 40%, rgba(45, 212, 164, 0.07), transparent 70%),
+        radial-gradient(circle at 50% 40%, rgba(34, 211, 238, 0.07), transparent 70%),
         var(--pil-bg-2);
     padding: 0.4rem;
 }
@@ -486,20 +476,20 @@ _CSS = """
     padding: 0.28rem 0.75rem;
     border: 1px solid transparent;
 }
-.pil-badge.ok { color: var(--pil-success); background: rgba(74, 222, 128, 0.09); border-color: rgba(74, 222, 128, 0.28); }
-.pil-badge.err { color: var(--pil-error); background: rgba(248, 113, 113, 0.09); border-color: rgba(248, 113, 113, 0.3); }
+.pil-badge.ok { color: var(--pil-success); background: rgba(52, 211, 153, 0.09); border-color: rgba(52, 211, 153, 0.28); }
+.pil-badge.err { color: var(--pil-error); background: rgba(251, 113, 133, 0.09); border-color: rgba(251, 113, 133, 0.3); }
 .pil-hint { font-size: 0.82rem; color: var(--pil-text-muted); margin: 0.1rem 0 0; }
 
 /* ---------- Primary result ---------- */
 .pil-result {
     position: relative;
     border-radius: var(--pil-radius-lg);
-    border: 1px solid rgba(45, 212, 164, 0.35);
+    border: 1px solid rgba(34, 211, 238, 0.35);
     background:
-        radial-gradient(420px 200px at 15% 0%, rgba(45, 212, 164, 0.14), transparent 70%),
-        radial-gradient(380px 200px at 100% 100%, rgba(245, 158, 11, 0.14), transparent 70%),
+        radial-gradient(420px 200px at 15% 0%, rgba(34, 211, 238, 0.14), transparent 70%),
+        radial-gradient(380px 200px at 100% 100%, rgba(139, 92, 246, 0.14), transparent 70%),
         var(--pil-bg-2);
-    box-shadow: 0 0 0 1px rgba(45, 212, 164, 0.05), 0 18px 40px -20px rgba(45, 212, 164, 0.35);
+    box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.05), 0 18px 40px -20px rgba(34, 211, 238, 0.35);
     padding: 1.2rem 1.35rem 1.1rem;
     animation: pil-rise 0.35s ease;
 }
@@ -513,7 +503,7 @@ _CSS = """
     color: var(--pil-text);
     font-variant-numeric: tabular-nums;
 }
-.pil-result-value .unit { font-size: 1.35rem; color: var(--pil-accent); margin-left: 0.3rem; letter-spacing: 0; }
+.pil-result-value .unit { font-size: 1.35rem; color: var(--pil-cyan); margin-left: 0.3rem; letter-spacing: 0; }
 .pil-result-sub { font-size: 0.83rem; color: var(--pil-text-muted); margin-top: 0.4rem; }
 @keyframes pil-rise {
     from { opacity: 0; transform: translateY(4px); }
@@ -535,7 +525,7 @@ _CSS = """
     position: relative;
     height: 6px;
     border-radius: 999px;
-    background: linear-gradient(90deg, #2DD4A4 0%, #F59E0B 55%, #F87171 100%);
+    background: linear-gradient(90deg, #22D3EE 0%, #8B5CF6 55%, #FBBF24 100%);
     opacity: 0.9;
 }
 .pil-scale-marker {
@@ -546,7 +536,7 @@ _CSS = """
     border-radius: 50%;
     background: var(--pil-text);
     border: 3px solid var(--pil-bg);
-    box-shadow: 0 0 0 1px rgba(232, 236, 234, 0.5), 0 0 12px rgba(232, 236, 234, 0.45);
+    box-shadow: 0 0 0 1px rgba(241, 245, 249, 0.5), 0 0 12px rgba(241, 245, 249, 0.45);
     transform: translate(-50%, -50%);
 }
 
@@ -555,9 +545,9 @@ _CSS = """
     font-size: 0.86rem;
     color: var(--pil-text-muted);
     line-height: 1.6;
-    background: linear-gradient(90deg, rgba(45, 212, 164, 0.07), rgba(245, 158, 11, 0.03));
+    background: linear-gradient(90deg, rgba(34, 211, 238, 0.07), rgba(139, 92, 246, 0.03));
     border: 1px solid var(--pil-border);
-    border-left: 2px solid var(--pil-accent);
+    border-left: 2px solid var(--pil-cyan);
     padding: 0.7rem 0.95rem;
     border-radius: 10px;
 }
@@ -575,9 +565,9 @@ _CSS = """
     display: inline-block;
     font-size: 0.72rem;
     font-weight: 550;
-    color: #FDE68A;
-    background: rgba(245, 158, 11, 0.12);
-    border: 1px solid rgba(245, 158, 11, 0.3);
+    color: #C4B5FD;
+    background: rgba(139, 92, 246, 0.12);
+    border: 1px solid rgba(139, 92, 246, 0.3);
     border-radius: 999px;
     padding: 0.12rem 0.6rem;
 }
@@ -592,7 +582,7 @@ _CSS = """
     padding: 1.5rem;
     border: 1px dashed var(--pil-border-strong);
     border-radius: var(--pil-radius);
-    background: rgba(12, 14, 15, 0.4);
+    background: rgba(8, 11, 20, 0.5);
     color: var(--pil-text-muted);
     font-size: 0.86rem;
     line-height: 1.55;
@@ -617,11 +607,11 @@ _CSS = """
     border-radius: 999px;
     padding: 0.3rem 0.75rem;
 }
-.pil-pipeline .step:last-child { border-color: rgba(45, 212, 164, 0.5); color: #99F6D4; }
+.pil-pipeline .step:last-child { border-color: rgba(34, 211, 238, 0.5); color: #A5F3FC; }
 .pil-pipeline .link {
     width: 22px;
     height: 1px;
-    background: linear-gradient(90deg, rgba(45, 212, 164, 0.7), rgba(245, 158, 11, 0.7));
+    background: linear-gradient(90deg, rgba(34, 211, 238, 0.7), rgba(139, 92, 246, 0.7));
 }
 .pil-grid {
     display: grid;
@@ -629,7 +619,7 @@ _CSS = """
     gap: 0.55rem;
 }
 .pil-grid .item {
-    background: rgba(12, 14, 15, 0.5);
+    background: rgba(8, 11, 20, 0.5);
     border: 1px solid var(--pil-border);
     border-radius: 10px;
     padding: 0.55rem 0.75rem;
@@ -651,13 +641,15 @@ _CSS = """
     gap: 0.75rem;
 }
 .pil-phase {
-    background: linear-gradient(180deg, rgba(28, 33, 35, 0.92), rgba(22, 26, 27, 0.92));
+    background: rgba(13, 18, 32, 0.68);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
     border: 1px solid var(--pil-border);
     border-radius: var(--pil-radius-lg);
     padding: 1rem 1.1rem;
     transition: border-color 0.2s ease, transform 0.2s ease;
 }
-.pil-phase:hover { border-color: rgba(45, 212, 164, 0.45); transform: translateY(-1px); }
+.pil-phase:hover { border-color: rgba(34, 211, 238, 0.45); transform: translateY(-1px); }
 .pil-phase .num {
     display: inline-grid;
     place-items: center;
@@ -666,9 +658,9 @@ _CSS = """
     border-radius: 8px;
     font-family: var(--pil-font-mono);
     font-size: 0.78rem;
-    color: #99F6D4;
-    background: rgba(45, 212, 164, 0.1);
-    border: 1px solid rgba(45, 212, 164, 0.35);
+    color: #A5F3FC;
+    background: rgba(34, 211, 238, 0.1);
+    border: 1px solid rgba(34, 211, 238, 0.35);
 }
 .pil-phase .name { font-size: 0.95rem; font-weight: 600; color: var(--pil-text); margin: 0.6rem 0 0.25rem; }
 .pil-phase .approach { font-size: 0.82rem; color: var(--pil-text-muted); line-height: 1.5; min-height: 2.5em; }
@@ -682,7 +674,7 @@ _CSS = """
 }
 .pil-list { margin: 0.2rem 0 0; padding-left: 1.1rem; color: var(--pil-text-muted); font-size: 0.86rem; line-height: 1.6; }
 .pil-list li { margin-bottom: 0.3rem; }
-.pil-list li::marker { color: var(--pil-accent); }
+.pil-list li::marker { color: var(--pil-cyan); }
 .pil-list b { color: var(--pil-text); font-weight: 600; }
 .pil-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .pil-tags .t {
@@ -703,6 +695,188 @@ _CSS = """
     margin-top: 0.1rem;
 }
 
+/* ---------- Top navigation (three-step flow) ---------- */
+.st-key-pil-nav {
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.35rem 0 0.9rem;
+    margin-bottom: 0.4rem;
+    border-bottom: 1px solid rgba(38, 52, 73, 0.6);
+}
+.pil-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    font-family: var(--pil-font-mono);
+    font-size: 0.74rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--pil-text);
+    white-space: nowrap;
+}
+.pil-brand .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--pil-cyan);
+    box-shadow: 0 0 10px rgba(34, 211, 238, 0.8);
+}
+.st-key-pil-steps button {
+    min-height: 2.1rem;
+    padding: 0.25rem 0.9rem;
+    border-radius: 999px;
+    box-shadow: none;
+    transform: none;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+}
+.st-key-pil-steps [data-testid="stBaseButton-secondary"] { background: rgba(17, 24, 39, 0.6); }
+.st-key-pil-steps button p { font-family: var(--pil-font-mono); font-size: 0.76rem; letter-spacing: 0.04em; }
+.st-key-pil-steps [data-testid="stBaseButton-primary"],
+.st-key-pil-steps [data-testid="stBaseButton-primary"]:hover {
+    background: rgba(34, 211, 238, 0.14);
+    color: #A5F3FC;
+    border-color: rgba(34, 211, 238, 0.7);
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.08);
+    transform: none;
+    filter: none;
+}
+.st-key-pil-steps [data-testid="stBaseButton-primary"] p { color: #A5F3FC; }
+
+/* ---------- Page heading (Calculations / Results) ---------- */
+.pil-page-head { margin: 0.6rem 0 0.9rem; }
+.pil-page-title {
+    font-size: clamp(1.6rem, 3.4vw, 2.3rem);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+    color: var(--pil-text);
+    margin: 0.35rem 0 0.4rem;
+}
+.pil-page-desc { font-size: 0.95rem; color: #CBD5E1; line-height: 1.6; max-width: 70ch; margin: 0; }
+
+/* ---------- Overview hero ---------- */
+.pil-hero {
+    text-align: center;
+    padding: clamp(2.5rem, 9vh, 6rem) 0 clamp(1.5rem, 4vh, 2.5rem);
+}
+.pil-hero h1 {
+    margin: 0.9rem 0 1rem;
+    padding: 0;
+    font-family: var(--pil-font-mono);
+    font-size: clamp(2.6rem, 9vw, 6rem);
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.05em;
+    text-transform: uppercase;
+    color: transparent;
+    background: linear-gradient(135deg, #FFFFFF, #CFFAFE 50%, #C4B5FD);
+    -webkit-background-clip: text;
+    background-clip: text;
+    filter: drop-shadow(0 0 24px rgba(34, 211, 238, 0.25));
+    text-shadow: none;
+}
+.pil-hero .pil-eyebrow { font-size: 0.76rem; }
+.pil-hero-sub {
+    display: inline-block;
+    max-width: 40rem;
+    margin: 0;
+    padding: 0.45rem 1.1rem;
+    font-size: 0.98rem;
+    line-height: 1.55;
+    color: #CBD5E1;
+    background: rgba(8, 11, 20, 0.6);
+    border: 1px solid rgba(38, 52, 73, 0.8);
+    border-radius: 999px;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+}
+.pil-intro {
+    max-width: 68ch;
+    margin: 1.6rem auto 0;
+    text-align: center;
+    font-size: 1rem;
+    line-height: 1.7;
+    color: #CBD5E1;
+}
+.pil-intro b { color: var(--pil-text); font-weight: 600; }
+/* Start CTA: centered, larger than regular primary buttons */
+.st-key-pil-cta { align-items: center; margin: 1.6rem 0 0.4rem; }
+.st-key-pil-cta button { min-width: 15rem; min-height: 3.1rem; border-radius: 999px; }
+.st-key-pil-cta button p { font-size: 1rem; letter-spacing: 0.02em; }
+
+/* Section label straight on the background */
+.pil-block-title {
+    font-size: 1.15rem;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    color: var(--pil-text);
+    margin: 2.2rem 0 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+.pil-block-title::before {
+    content: "";
+    width: 18px;
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--pil-cyan), var(--pil-violet));
+}
+
+/* Objectives / key features: open grids of small glass tiles */
+.pil-feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 0.75rem;
+}
+.pil-feature {
+    background: rgba(13, 18, 32, 0.62);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(51, 71, 106, 0.6);
+    border-radius: var(--pil-radius-lg);
+    padding: 1rem 1.1rem;
+}
+.pil-feature .icon { font-size: 1.25rem; line-height: 1; }
+.pil-feature .name { font-size: 0.95rem; font-weight: 600; color: var(--pil-text); margin: 0.55rem 0 0.3rem; }
+.pil-feature .desc { font-size: 0.84rem; color: var(--pil-text-muted); line-height: 1.55; }
+.pil-objectives { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.55rem;
+                  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.pil-objectives li {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    color: #CBD5E1;
+    background: rgba(8, 11, 20, 0.5);
+    border: 1px solid rgba(38, 52, 73, 0.7);
+    border-radius: var(--pil-radius);
+    padding: 0.7rem 0.9rem;
+}
+.pil-objectives .n { font-family: var(--pil-font-mono); font-size: 0.78rem; color: var(--pil-cyan); padding-top: 0.12rem; }
+.pil-objectives b { color: var(--pil-text); font-weight: 600; }
+
+/* ---------- Results: run summary strip ---------- */
+.pil-run {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.4rem;
+    align-items: baseline;
+    font-size: 0.85rem;
+    color: var(--pil-text-muted);
+    padding: 0.7rem 1rem;
+    background: rgba(8, 11, 20, 0.55);
+    border: 1px solid rgba(38, 52, 73, 0.8);
+    border-radius: var(--pil-radius);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+}
+.pil-run .v { color: var(--pil-text); font-weight: 600; }
+.pil-run .mono { font-family: var(--pil-font-mono); font-weight: 400; word-break: break-all; }
+
 /* ---------- Footer ---------- */
 .pil-footer {
     text-align: center;
@@ -720,10 +894,12 @@ _CSS = """
     .pil-section-glyph { display: none; }
     .pil-section-title { font-size: 1.15rem; }
     .pil-result-value { font-size: 2.4rem; }
-    .pil-hero-title { font-size: 1.8rem; }
-    .pil-hero { padding: 1.6rem 1rem 1.4rem; }
     [class*="st-key-pil-card-"], [class*="st-key-pil-accent-"] { padding: 1rem !important; }
     .stTabs [role="tab"] { padding: 0.45rem 0.7rem; }
+    .st-key-pil-nav { justify-content: center; }
+    .st-key-pil-steps button { padding: 0.2rem 0.65rem; }
+    .pil-hero-sub { border-radius: var(--pil-radius); }
+    .pil-objectives { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) {
     .pil-status-item.ok .dot::after { animation: none; display: none; }
@@ -744,14 +920,14 @@ def _glyph_svg():
     return (
         '<svg viewBox="0 0 40 40" width="30" height="30" aria-hidden="true">'
         f'<defs><linearGradient id="{gid}" x1="0" y1="0" x2="1" y2="1">'
-        '<stop offset="0" stop-color="#2DD4A4"/><stop offset="1" stop-color="#F59E0B"/>'
+        '<stop offset="0" stop-color="#22D3EE"/><stop offset="1" stop-color="#8B5CF6"/>'
         "</linearGradient></defs>"
         f'<path d="M5 27 L14 13 L24 27 L34 13" fill="none" stroke="url(#{gid})" '
         'stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>'
-        '<circle cx="5" cy="27" r="2.6" fill="#2DD4A4"/>'
-        '<circle cx="14" cy="13" r="2.6" fill="#7FC98A"/>'
-        '<circle cx="24" cy="27" r="2.6" fill="#C8B04C"/>'
-        '<circle cx="34" cy="13" r="2.6" fill="#F59E0B"/>'
+        '<circle cx="5" cy="27" r="2.6" fill="#22D3EE"/>'
+        '<circle cx="14" cy="13" r="2.6" fill="#5EB8F3"/>'
+        '<circle cx="24" cy="27" r="2.6" fill="#7C8CF4"/>'
+        '<circle cx="34" cy="13" r="2.6" fill="#8B5CF6"/>'
         "</svg>"
     )
 
@@ -900,7 +1076,7 @@ def mol_caption(smiles):
 
 
 def phase_grid(phases):
-    """About tab: one card per project phase. `phases` = [(num, name, approach, result), ...]."""
+    """Overview page: one card per project phase. `phases` = [(num, name, approach, result), ...]."""
     cards = "".join(
         '<div class="pil-phase">'
         f'<span class="num">{num}</span>'
@@ -937,18 +1113,223 @@ def style_release_axes(fig, ax, title, legend=False):
 
 
 # ---------------------------------------------------------------------------
-# Hero -- static banner at the top of the page: eyebrow, title, subtitle and
-# a polymer-chain motif. Plain markup styled by _CSS (no iframe, no JS).
+# Quantum Swarm background -- the interactive particle "galaxy" that fills the
+# whole viewport behind every page. Plain HTML/CSS/JS in a components.html
+# iframe, which the CSS in _CSS (.st-key-pil-bg) pins to the viewport behind
+# the app content with pointer-events disabled, so it never blocks clicks,
+# typing or scrolling. Pointer input is read from the parent page instead
+# (Streamlit component iframes are same-origin), which keeps the repulsion and
+# click shockwaves working across the whole page. Physics: a golden-angle
+# spiral of particles on springs. Pauses when the tab is hidden or animation
+# is switched off; reduced-motion users get a still frame.
 # ---------------------------------------------------------------------------
-def hero(title, eyebrow, subtitle=None):
-    sub = f'<p class="pil-hero-sub">{subtitle}</p>' if subtitle else ""
-    _md(
-        '<div class="pil-hero">'
-        f'<div class="pil-hero-art">{_glyph_svg()}</div>'
-        f'<div class="pil-eyebrow">{eyebrow}</div>'
-        f'<h1 class="pil-hero-title">{title}</h1>'
-        f"{sub}</div>"
-    )
+_QUANTUM_SWARM_HTML = """<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+html, body { margin: 0; height: 100%; overflow: hidden; background: #080B14; }
+canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+</style></head>
+<body>
+<canvas id="canvas" aria-hidden="true"></canvas>
+<script>
+(() => {
+  const P = __PARAMS__;
+  const CYAN = [34, 211, 238], VIOLET = [139, 92, 246], BG = "#080B14";
+  const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(", ");
+
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d", { alpha: false });
+
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const running = P.animate && !reducedMotion;
+  let needsFrame = true;   // paint one still frame even when paused (first paint, resize)
+  let time = 0;
+  let particles = [];
+  const dim = { width: 0, height: 0, cx: 0, cy: 0 };
+  const pointer = { x: -2000, y: -2000, isDown: false, radius: 150, shockwaves: [] };
+
+  // Golden-angle spiral (sunflower), denser toward the center. Sized to reach
+  // the viewport corners; particle count scales with screen area.
+  function buildSwarm() {
+    const { width, height, cx, cy } = dim;
+    if (width === 0 || height === 0) return;
+    const angleIncrement = Math.PI * 2 * ((1 + Math.sqrt(5)) / 2);
+    const maxRadius = Math.hypot(width, height) * 0.52;
+    const n = Math.round(Math.min(P.maxParticles, Math.max(P.minParticles, (width * height) / 1500)));
+    particles = [];
+    for (let i = 0; i < n; i++) {
+      const t = Math.pow(i / (n - 1), 0.6);
+      const dst = t * maxRadius;
+      const angle = i * angleIncrement;
+      particles.push({
+        x: cx + Math.cos(angle) * dst, y: cy + Math.sin(angle) * dst, vx: 0, vy: 0,
+        baseX: 0, baseY: 0, angle: angle, distance: dst,
+        size: Math.random() * 1.5 + 0.5, excitation: 0,
+        color: mix(CYAN, VIOLET, t),   // cyan core -> violet rim
+      });
+    }
+  }
+
+  function resize() {
+    const width = window.innerWidth, height = window.innerHeight;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);  // cap DPR for performance
+    Object.assign(dim, { width: width, height: height, cx: width / 2, cy: height / 2 });
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    buildSwarm();
+    needsFrame = true;
+  }
+  window.addEventListener("resize", resize);
+  resize();
+
+  function loop() {
+    const animate = running && !document.hidden;
+    if (!animate && !needsFrame) { requestAnimationFrame(loop); return; }
+    needsFrame = false;
+    if (animate) time += 0.002;  // global rotation speed
+    const { width, height, cx, cy } = dim;
+    const cyan = CYAN.join(", "), violet = VIOLET.join(", ");
+
+    // 1. Background: deep navy with soft cyan / violet nebulae
+    ctx.fillStyle = BG;
+    ctx.fillRect(0, 0, width, height);
+    const glowCyan = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(width, height) * 0.45);
+    glowCyan.addColorStop(0, `rgba(${cyan}, 0.10)`);
+    glowCyan.addColorStop(1, `rgba(${cyan}, 0)`);
+    ctx.fillStyle = glowCyan;
+    ctx.fillRect(0, 0, width, height);
+    const glowViolet = ctx.createRadialGradient(width, height, 0, width, height, width * 0.6);
+    glowViolet.addColorStop(0, `rgba(${violet}, 0.14)`);
+    glowViolet.addColorStop(1, `rgba(${violet}, 0)`);
+    ctx.fillStyle = glowViolet;
+    ctx.fillRect(0, 0, width, height);
+
+    // 2. Shockwaves expand and fade
+    for (let s = pointer.shockwaves.length - 1; s >= 0; s--) {
+      const sw = pointer.shockwaves[s];
+      sw.radius += 15;
+      sw.strength *= 0.92;
+      if (sw.radius > sw.maxRadius || sw.strength < 0.01) pointer.shockwaves.splice(s, 1);
+    }
+
+    // 3. Physics: spring to the rotating orbit, pointer repulsion, shockwave impulses
+    for (const p of particles) {
+      const currentAngle = p.angle + time * (1 + 100 / (p.distance + 100));  // inner particles rotate faster
+      p.baseX = cx + Math.cos(currentAngle) * p.distance;
+      p.baseY = cy + Math.sin(currentAngle) * p.distance;
+      p.vx += (p.baseX - p.x) * 0.02;
+      p.vy += (p.baseY - p.y) * 0.02;
+
+      const dxP = p.x - pointer.x, dyP = p.y - pointer.y;
+      const distP = Math.sqrt(dxP * dxP + dyP * dyP);
+      if (distP < pointer.radius && distP > 0) {
+        const force = (pointer.radius - distP) / pointer.radius;
+        const direction = pointer.isDown ? -0.5 : 1.5;  // pressed: pull in slightly
+        p.vx += (dxP / distP) * force * direction;
+        p.vy += (dyP / distP) * force * direction;
+        p.excitation = Math.max(p.excitation, force);
+      }
+
+      for (const sw of pointer.shockwaves) {
+        const dxS = p.x - sw.x, dyS = p.y - sw.y;
+        const distS = Math.sqrt(dxS * dxS + dyS * dyS);
+        const ringDelta = Math.abs(distS - sw.radius);
+        if (ringDelta < 30 && distS > 0) {
+          const impulse = (1 - ringDelta / 30) * sw.strength * 15;
+          p.vx += (dxS / distS) * impulse;
+          p.vy += (dyS / distS) * impulse;
+          p.excitation = Math.max(p.excitation, 1.0);
+        }
+      }
+
+      p.vx *= 0.88;  // damping
+      p.vy *= 0.88;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.excitation *= 0.95;
+    }
+
+    // 4. Constellation lines between near neighbours (limited look-ahead keeps it cheap)
+    ctx.lineWidth = 0.6;
+    for (let i = 0; i < particles.length; i++) {
+      const p1 = particles[i];
+      const limit = Math.min(particles.length, i + 15);
+      for (let j = i + 1; j < limit; j++) {
+        const p2 = particles[j];
+        const dx = p1.x - p2.x, dy = p1.y - p2.y;
+        const distSq = dx * dx + dy * dy;
+        if (distSq < 3600) {
+          const opacity = 1 - Math.sqrt(distSq) / 60;
+          const excitation = Math.max(p1.excitation, p2.excitation);
+          const alpha = Math.min(1, opacity * 0.2 + excitation * 0.5);
+          ctx.strokeStyle = `rgba(${cyan}, ${alpha})`;
+          ctx.beginPath();
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.stroke();
+        }
+      }
+    }
+
+    // 5. Particles, with a halo when excited
+    for (const p of particles) {
+      const radius = p.size + p.excitation * 2.5;
+      ctx.fillStyle = `rgb(${p.color})`;
+      if (p.excitation > 0.3) {
+        ctx.save();
+        ctx.globalAlpha = p.excitation * 0.4;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, radius * 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    requestAnimationFrame(loop);
+  }
+
+  // Pointer input comes from the app page: this iframe sits behind the content
+  // with pointer-events: none. It is pinned at (0, 0) and fills the viewport,
+  // so the page's client coordinates are canvas coordinates.
+  let host = null;
+  try { host = window.parent.document; } catch (err) { host = null; }  // cross-origin: no interaction
+  if (host && running) {
+    host.addEventListener("pointermove", (e) => { pointer.x = e.clientX; pointer.y = e.clientY; }, { passive: true });
+    host.addEventListener("pointerdown", (e) => {
+      pointer.isDown = true;
+      pointer.x = e.clientX; pointer.y = e.clientY;
+      pointer.shockwaves.push({ x: e.clientX, y: e.clientY, radius: 10, maxRadius: 200, strength: 0.8 });
+    }, { passive: true });
+    const release = () => { pointer.isDown = false; };
+    host.addEventListener("pointerup", release, { passive: true });
+    host.addEventListener("pointercancel", release, { passive: true });
+    host.documentElement.addEventListener("pointerleave", () => {
+      pointer.x = -2000; pointer.y = -2000; pointer.isDown = false;
+    }, { passive: true });
+  }
+
+  requestAnimationFrame(loop);
+})();
+</script>
+</body></html>
+"""
+
+
+def quantum_background(animate=True, min_particles=220, max_particles=950):
+    """Render the full-viewport Quantum Swarm background. Call it once, at the
+    same point on every run (before any page content), so Streamlit keeps the
+    same iframe -- and a running animation -- when the user switches pages."""
+    params = json.dumps({"animate": animate, "minParticles": min_particles, "maxParticles": max_particles})
+    markup = _QUANTUM_SWARM_HTML.replace("__PARAMS__", params)
+    with st.container(key="pil-bg"):
+        if hasattr(st, "iframe"):
+            st.iframe(markup, height=1)  # size comes from the .st-key-pil-bg CSS
+        else:  # older Streamlit without st.iframe
+            components.html(markup, height=0)
 
 
 inject_css()
@@ -996,8 +1377,7 @@ def get_structure_driven_D(smiles, parsed_ok):
     the SMILES doesn't parse, or anything goes wrong -- callers should
     treat None as "fall back to manual D".
 
-    Shared by the Drug Release (PINN) tab and the Instant Prediction
-    (DeepONet) tab so they always agree on the same structure-to-D value
+    Shared by the PINN and DeepONet release curves so they always agree on the same structure-to-D value
     for a given polymer.
     """
     if not (PERMEABILITY_AVAILABLE and os.path.exists("models/permeability_xgb.joblib") and parsed_ok):
@@ -1081,12 +1461,47 @@ def render_molecule_image(smiles, size=(260, 220)):
 
 
 # ---------------------------------------------------------------------------
-# Session state
+# Session state + page flow
 # ---------------------------------------------------------------------------
+# Three pages, switched through session state (single script, no
+# st.navigation): Overview -> Calculations -> Results. The page is mirrored to
+# the ?page= query param so a refresh stays on the same page.
+PAGES = {
+    "overview": "01 · Overview",
+    "calculate": "02 · Calculations",
+    "results": "03 · Results",
+}
+
+if "page" not in st.session_state:
+    _qp_page = st.query_params.get("page")
+    st.session_state.page = _qp_page if _qp_page in PAGES else "overview"
 if "smiles_value" not in st.session_state:
     st.session_state.smiles_value = EXAMPLE_POLYMERS["Polystyrene"]
 if "polymer_choice" not in st.session_state:
     st.session_state.polymer_choice = "Polystyrene"
+
+deeponet_ready = DEEPONET_AVAILABLE and os.path.exists("models/deeponet_diffusion.pt")
+
+# Widget defaults live in session state (not in value=...), so the inputs keep
+# their values across pages without Streamlit's "default value + Session State"
+# warning. use_structure_D is seeded on the Calculations page, where D is known.
+st.session_state.setdefault("D_slider", 0.3)
+st.session_state.setdefault("train_pinn", not deeponet_ready)
+st.session_state.setdefault("batch_text", "CC(c1ccccc1)C\nCC\nCC(C)(C(=O)OC)C")
+st.session_state.setdefault("animate_bg", True)
+
+# Streamlit drops a widget's session-state value on any run where that widget
+# isn't rendered. The calculation inputs only render on the Calculations page,
+# so re-assign them every run to keep them while the user is on other pages.
+for _key in ("smiles_value", "polymer_choice", "use_structure_D", "D_slider",
+             "train_pinn", "batch_text", "animate_bg"):
+    if _key in st.session_state:
+        st.session_state[_key] = st.session_state[_key]
+
+
+def go_to(page):
+    st.session_state.page = page
+    st.query_params["page"] = page
 
 
 def _apply_dropdown_choice():
@@ -1101,435 +1516,109 @@ def _use_example_chip(name, smiles):
 
 
 # ---------------------------------------------------------------------------
-# Hero + model availability
+# Full-page background + top navigation (shared by all three pages)
 # ---------------------------------------------------------------------------
-HERO_SUBTITLE = "AI-powered prediction of polymer properties from molecular structure."
+# Rendered first, at the same spot every run, so the same background iframe
+# (and its running animation) survives page switches.
+quantum_background(animate=st.session_state.animate_bg)
 
-hero(
-    title="Polymer Intelligence Lab",
-    eyebrow="Structure → Property",
-    subtitle=HERO_SUBTITLE,
-)
+with st.container(horizontal=True, key="pil-nav", gap="small"):
+    _md('<span class="pil-brand pil-on-bg"><span class="dot"></span>Polymer Intelligence Lab</span>')
+    with st.container(horizontal=True, key="pil-steps", gap="small", width="content"):
+        for _page, _label in PAGES.items():
+            st.button(
+                _label,
+                key=f"nav_{_page}",
+                on_click=go_to,
+                args=(_page,),
+                type="primary" if st.session_state.page == _page else "secondary",
+            )
+        st.toggle("Motion", key="animate_bg", help="Animate the particle background.")
 
-# Reflects which model files are actually present -- nothing is loaded here.
-status_bar([
-    ("XGBoost · Tg", os.path.exists("models/xgboost_tg.joblib"), "Phase 1 model file"),
-    ("GNN · Tg", GNN_AVAILABLE and os.path.exists("models/gnn_tg.pt"), "Phase 2 model file"),
-    ("PINN · diffusion", True, "Phase 3: trained live in the Drug Release tab"),
-    ("DeepONet · diffusion", DEEPONET_AVAILABLE and os.path.exists("models/deeponet_diffusion.pt"),
-     "Phase 4 model file"),
-])
+page = st.session_state.page
 
-# ---------------------------------------------------------------------------
-# Prediction workspace -- polymer selection (shared by every tab)
-# ---------------------------------------------------------------------------
-with card("selection", accent=True):
-    col_input, col_structure = st.columns([1.8, 1], gap="large")
 
-    with col_input:
-        card_header(
-            "Polymer input",
-            "Choose a known polymer or paste a repeat-unit SMILES. Every tab below uses this structure.",
-        )
-        field_label("Polymer")
-        dropdown_options = list(EXAMPLE_POLYMERS.keys()) + [CUSTOM_LABEL]
-        st.selectbox(
-            "Select polymer",
-            dropdown_options,
-            key="polymer_choice",
-            on_change=_apply_dropdown_choice,
-            label_visibility="collapsed",
-        )
+def page_heading(eyebrow, title, description=None):
+    desc = f'<p class="pil-page-desc">{description}</p>' if description else ""
+    _md(
+        '<div class="pil-page-head pil-on-bg">'
+        f'<div class="pil-eyebrow">{eyebrow}</div>'
+        f'<div class="pil-page-title" role="heading" aria-level="1">{title}</div>'
+        f"{desc}</div>"
+    )
 
-        field_label("Quick examples")
-        with st.container(horizontal=True, gap="small", key="pil-chips"):
-            for label, smiles in EXAMPLE_POLYMERS.items():
-                st.button(
-                    label,
-                    key=f"example_{label}",
-                    on_click=_use_example_chip,
-                    args=(label, smiles),
-                    type="primary" if st.session_state.polymer_choice == label else "secondary",
-                )
 
-        field_label("Repeat-unit SMILES")
-        smiles_input = st.text_input(
-            "Repeat-unit SMILES",
-            key="smiles_value",
-            help="The polymer's repeat-unit structure as a SMILES string.",
-            label_visibility="collapsed",
-            placeholder="e.g. CC(c1ccccc1)C",
-        )
+def block_title(text):
+    _md(f'<div class="pil-block-title pil-on-bg" role="heading" aria-level="2">{text}</div>')
 
-        _parsed_ok = bool(smiles_input) and Chem.MolFromSmiles(smiles_input) is not None
-        if smiles_input and _parsed_ok:
-            badge("✓ Valid SMILES — ready to predict", ok=True)
-        elif smiles_input and not _parsed_ok:
-            badge("⚠ Invalid SMILES — please enter a valid molecular structure", ok=False)
+
+def plot_release_curves(curves, title):
+    """Draw one or more release curves. `curves` = [(t, C, label, color, dashed), ...]."""
+    fig, ax = plt.subplots(figsize=(7, 4.2), dpi=120)
+    for t_plot, C, label, color, dashed in curves:
+        if dashed:
+            ax.plot(t_plot, C, linewidth=2, color=color, linestyle="--", label=label)
         else:
-            hint("Select an example or type a SMILES string above.")
+            ax.plot(t_plot, C, linewidth=2.5, color=color, label=label)
+            ax.fill_between(t_plot, C, alpha=0.12, color=color)
+    style_release_axes(fig, ax, title, legend=True)
+    st.pyplot(fig)
+    plt.close(fig)
 
-    with col_structure:
-        with st.container(key="pil-structure"):
-            field_label("Structure preview")
-            img = render_molecule_image(smiles_input, size=(360, 260)) if _parsed_ok else None
-            if img is not None:
-                st.image(img, width="stretch")
-                mol_caption(smiles_input)
-            elif _parsed_ok:
-                empty_state("Structure preview unavailable for this input.", compact=True)
-            else:
-                empty_state("Enter a valid SMILES string to preview its 2D structure.", compact=True)
 
-polymer_name = st.session_state.polymer_choice if st.session_state.polymer_choice != CUSTOM_LABEL else "this polymer"
-
-# ---------------------------------------------------------------------------
-# Feature tabs
-# ---------------------------------------------------------------------------
-tab1, tab2, tab4, tab3, tab5 = st.tabs([
-    ":material/device_thermostat: Glass Transition Temperature",
-    ":material/medication: Drug Release",
-    ":material/bolt: Instant Prediction",
-    ":material/menu_book: About",
-    ":material/table_view: Batch",
-])
-
-with tab1:
-    section_header(
-        "Phase 1 · Phase 2 — property prediction",
-        "Glass transition temperature",
-        "Predict Tg from the repeat-unit structure with XGBoost on Morgan fingerprints, "
-        "cross-checked by the graph neural network when its weights are available.",
+# ===========================================================================
+# Page 1 -- Project overview
+# ===========================================================================
+if page == "overview":
+    _md(
+        '<div class="pil-hero pil-on-bg">'
+        '<div class="pil-eyebrow">Structure → Property · Physics-informed ML</div>'
+        "<h1>Polymer Intelligence Lab</h1>"
+        '<p class="pil-hero-sub">AI-powered prediction of polymer properties from molecular structure.</p>'
+        "</div>"
     )
 
-    with card("tg-predict", accent=True):
-        predict_clicked = st.button(
-            "Predict glass transition temperature",
-            key="tg_button",
-            disabled=not _parsed_ok,
-            width="stretch",
+    # Reflects which model files are actually present -- nothing is loaded here.
+    status_bar([
+        ("XGBoost · Tg", os.path.exists("models/xgboost_tg.joblib"), "Phase 1 model file"),
+        ("GNN · Tg", GNN_AVAILABLE and os.path.exists("models/gnn_tg.pt"), "Phase 2 model file"),
+        ("PINN · diffusion", True, "Phase 3: trained live on demand"),
+        ("DeepONet · diffusion", deeponet_ready, "Phase 4 model file"),
+    ])
+
+    _md(
+        '<div class="pil-intro pil-on-bg">A from-scratch machine learning project that predicts a polymer\'s '
+        "<b>glass transition temperature (Tg)</b> from its repeat-unit structure, and models "
+        "<b>drug release by diffusion</b> through a polymer slab with physics-informed learning. "
+        "It progresses from classical ML through graph neural networks and physics-informed "
+        "networks to a neural operator.</div>"
+    )
+
+    with st.container(key="pil-cta"):
+        st.button(
+            "Start",
+            key="start_button",
             type="primary",
-            icon=":material/online_prediction:",
-        )
-        if not _parsed_ok and not predict_clicked:
-            hint("Enter a valid SMILES string above to enable this button.")
-
-        if predict_clicked:
-            if not _parsed_ok:
-                badge("⚠ Invalid SMILES — please enter a valid molecular structure before predicting", ok=False)
-            else:
-                with st.spinner("Analyzing molecular structure..."):
-                    try:
-                        X = featurize_smiles(smiles_input)
-                        if X is None:
-                            raise ValueError("Could not parse this SMILES string.")
-                        model = load_tg_model()
-                        xgb_pred = float(model.predict(X)[0])
-
-                        gnn_pred = None
-                        if GNN_AVAILABLE and os.path.exists("models/gnn_tg.pt"):
-                            try:
-                                gnn_model = load_gnn_model()
-                                gnn_pred = predict_gnn_tg(smiles_input, gnn_model)
-                            except Exception:
-                                gnn_pred = None
-
-                        ensemble_pred = (xgb_pred + gnn_pred) / 2 if gnn_pred is not None else None
-
-                        st.session_state["last_tg_result"] = {
-                            "value": xgb_pred,
-                            "gnn_value": gnn_pred,
-                            "ensemble_value": ensemble_pred,
-                            "smiles": smiles_input,
-                            "name": polymer_name,
-                        }
-                    except Exception:
-                        st.session_state["last_tg_result"] = None
-                        st.error("⚠ Something went wrong generating this prediction. Please try a different SMILES string.")
-
-        result = st.session_state.get("last_tg_result")
-        if result and result["smiles"] == smiles_input:
-            pred = result["value"]
-
-            # Map Tg onto a fixed, clearly-labeled visual scale. Purely a display
-            # aid -- the underlying predicted value is used as-is everywhere else.
-            scale_min, scale_max = -150.0, 250.0
-            pct = max(0.0, min(1.0, (pred - scale_min) / (scale_max - scale_min))) * 100
-
-            col_result, col_models = st.columns([1.35, 1], gap="medium")
-            with col_result:
-                result_card(
-                    "Predicted glass transition temperature",
-                    f"{pred:.1f}",
-                    "°C",
-                    f"{esc(result['name'])} · XGBoost (Phase 1)",
-                    scale=(pct, scale_min, scale_max),
-                )
-
-            # ---- Multi-model comparison (Phase 1 XGBoost, Phase 2 GNN, ensemble) ----
-            with col_models:
-                field_label("Model comparison")
-                if result.get("gnn_value") is not None:
-                    st.metric("XGBoost (Phase 1)", f"{result['value']:.1f} °C")
-                    st.metric("GNN (Phase 2)", f"{result['gnn_value']:.1f} °C")
-                    st.metric("Ensemble average", f"{result['ensemble_value']:.1f} °C")
-                else:
-                    st.info("ℹ️ The Phase 2 GNN model wasn't found, so only the XGBoost prediction is shown.")
-
-            callout(
-                "<b>What this means:</b> below the glass transition temperature, "
-                "the polymer behaves more like a rigid glass. Above it, the "
-                "polymer becomes softer and more rubber-like. Prediction from an "
-                "XGBoost model trained on Morgan fingerprints (Phase 1)."
-            )
-        elif not predict_clicked:
-            empty_state("Run a prediction to see the predicted Tg, the model comparison and where it sits on the glassy → rubber-like scale.")
-
-    # ---- Model information (compact) ----
-    with card("tg-model"):
-        card_header("Model information")
-        pipeline(["SMILES", "Molecular Fingerprint", "XGBoost", "Tg Prediction"])
-        info_grid(
-            [
-                ("Model", "XGBoost"),
-                ("Input", "Polymer SMILES"),
-                ("Features", "Morgan Fingerprints"),
-                ("Output", "Glass Transition Temp."),
-                ("Unit", "°C"),
-                ("Stage", "Phase 1"),
-            ]
+            icon=":material/arrow_forward:",
+            on_click=go_to,
+            args=("calculate",),
         )
 
-with tab2:
-    section_header(
-        "Phase 3 — physics-informed neural network",
-        "Drug release simulation",
-        "Train a PINN on Fick's second law for the chosen effective diffusion coefficient D, "
-        "then plot how concentration at the center of the polymer slab falls over time.",
-    )
-    callout(
-        "This trains a small physics-informed neural network live, using a "
-        "diffusion coefficient placeholder. This demo uses a <b>reduced, "
-        "faster</b> training run than our fully validated version &mdash; "
-        "treat the curve's overall <b>shape</b> as illustrative, not precise. "
-        "Training takes about 20&ndash;30 seconds."
-    )
-
-    # ---- Structure-driven D (Phase 3 permeability model), if available ----
-    auto_D = get_structure_driven_D(smiles_input, _parsed_ok)
-
-    col_params, col_curve = st.columns([1, 1.65], gap="medium")
-    with col_params:
-        with card("pinn-params"):
-            card_header("Simulation parameters")
-            if auto_D is not None:
-                st.info(
-                    f"🔬 Predicted CO₂ permeability suggests an effective diffusion "
-                    f"coefficient of **D ≈ {auto_D:.2f}**. This is derived from the "
-                    f"structure's predicted permeability as a physically-related "
-                    f"proxy — not a literally measured drug-diffusion coefficient."
-                )
-
-            use_structure_D = st.checkbox(
-                "Use structure-predicted D",
-                value=(auto_D is not None),
-                disabled=(auto_D is None),
-            )
-
-            field_label("Effective diffusion coefficient (D)")
-            D_manual = st.slider(
-                "Effective diffusion coefficient (D)",
-                min_value=0.01, max_value=1.0, value=0.3, step=0.01,
-                help="Higher D = faster release. In the full project this comes from a permeability model; here it's a direct slider so you can explore.",
-                label_visibility="collapsed",
-            )
-
-            if use_structure_D and auto_D is not None:
-                D_manual = auto_D
-
-            release_speed = "slow release" if D_manual < 0.33 else "moderate release" if D_manual < 0.66 else "fast release"
-            readout("D", f"{D_manual:.2f}", release_speed)
-
-            run_clicked = st.button(
-                "Train PINN and show release curve",
-                key="pinn_button",
-                disabled=not _parsed_ok,
-                width="stretch",
-                type="primary",
-                icon=":material/model_training:",
-            )
-            if not _parsed_ok and not run_clicked:
-                hint("Enter a valid SMILES string above to enable this button.")
-
-            info_grid(
-                [("Adam epochs", "800"), ("L-BFGS rounds", "5"), ("Probe point", "x = 0.5"), ("Time span", "0 – 5")],
-                mono_keys=("Adam epochs", "L-BFGS rounds", "Probe point", "Time span"),
-            )
-
-    with col_curve:
-        with card("pinn-curve", accent=True):
-            card_header("Release curve", "Concentration at the slab center over time")
-            if run_clicked:
-                try:
-                    D_key = round(D_manual, 2)
-                    with st.spinner("Training physics-informed model... (about 20-30 seconds)"):
-                        t_plot, C_center = _cached_pinn_release_curve(D_key)
-                    st.caption(f"Trained with D = {D_key:.2f} (this exact value determines the curve shape).")
-
-                    fig, ax = plt.subplots(figsize=(7, 4.2), dpi=120)
-                    ax.plot(t_plot, C_center, linewidth=2.5, color=CURVE_PRIMARY, label="PINN (live-trained)")
-                    ax.fill_between(t_plot, C_center, alpha=0.12, color=CURVE_PRIMARY)
-                    style_release_axes(fig, ax, f"Predicted release curve: {polymer_name} (D={D_manual:.2f})", legend=True)
-                    st.pyplot(fig)
-                    plt.close(fig)
-                    callout(
-                        "<b>How to read this:</b> the curve shows how much drug "
-                        "concentration remains at the center of the polymer slab over "
-                        "time. A steep early drop means fast initial release; a curve "
-                        "that flattens out means release has mostly finished."
-                    )
-                except Exception:
-                    st.error("⚠ The simulation could not complete. Please try again or adjust the diffusion coefficient.")
-            else:
-                empty_state(
-                    "Set D and train the PINN to plot the release curve. "
-                    "Curves are cached per D value, so re-running the same D is instant."
-                )
-
-with tab4:
-    deeponet_ready = DEEPONET_AVAILABLE and os.path.exists("models/deeponet_diffusion.pt")
-    eval_results = load_deeponet_eval_results() if deeponet_ready else None
-
-    if eval_results is not None:
-        accuracy_note = (
-            f"validated MAE {eval_results['mae']:.4f}, "
-            f"R² {eval_results['r2']:.3f} on {len(eval_results['D_values_tested'])} "
-            f"D values never seen during training"
-        )
-    else:
-        accuracy_note = "accuracy not yet validated -- run deeponet_evaluate.py"
-
-    section_header(
-        "Phase 4 — neural operator",
-        "Instant release prediction",
-        "A DeepONet trained once, offline, across many D values: each new D is a single forward pass, "
-        "so the release curve updates as you move the slider.",
-    )
-    callout(
-        f"<b>What's different here:</b> the Drug Release tab trains a fresh "
-        f"PINN from scratch every time you change D (~20&ndash;30 seconds). "
-        f"This tab instead uses a <b>DeepONet</b> (a neural operator) "
-        f"trained once, offline, across many D values &mdash; evaluating a "
-        f"new D afterward is a single forward pass, so the curve updates "
-        f"instantly as you move the slider. The tradeoff is a small drop in "
-        f"accuracy versus training a dedicated PINN for that exact D "
-        f"({accuracy_note})."
+    block_title("Objectives")
+    _md(
+        '<ol class="pil-objectives">'
+        '<li><span class="n">01</span><span><b>Predict Tg from structure</b> &mdash; from a repeat-unit '
+        "SMILES string alone, with no lab measurement.</span></li>"
+        '<li><span class="n">02</span><span><b>Compare model families honestly</b> &mdash; fingerprints vs. '
+        "molecular graphs, checked with scaffold splits.</span></li>"
+        '<li><span class="n">03</span><span><b>Embed physics in learning</b> &mdash; solve the diffusion '
+        "PDE (Fick's second law) with a physics-only loss.</span></li>"
+        '<li><span class="n">04</span><span><b>Make simulation instant</b> &mdash; a neural operator that '
+        "returns a release curve for any D in one forward pass.</span></li>"
+        "</ol>"
     )
 
-    if not deeponet_ready:
-        st.info(
-            "ℹ️ The trained DeepONet model wasn't found "
-            "(models/deeponet_diffusion.pt). Run "
-            "`python src/phase4_neural_operator/train_deeponet.py` to "
-            "enable this tab."
-        )
-    else:
-        auto_D_instant = get_structure_driven_D(smiles_input, _parsed_ok)
-
-        col_controls, col_instant = st.columns([1, 1.65], gap="medium")
-        with col_controls:
-            with card("instant-controls"):
-                card_header("Operator input")
-                if auto_D_instant is not None:
-                    st.info(
-                        f"🔬 Predicted CO₂ permeability suggests an effective "
-                        f"diffusion coefficient of **D ≈ {auto_D_instant:.2f}** "
-                        f"(same structure-to-D pipeline as the Drug Release tab)."
-                    )
-
-                use_structure_D_instant = st.checkbox(
-                    "Use structure-predicted D",
-                    value=(auto_D_instant is not None),
-                    disabled=(auto_D_instant is None),
-                    key="instant_use_structure_D",
-                )
-
-                field_label("Effective diffusion coefficient (D)")
-                D_instant = st.slider(
-                    "Effective diffusion coefficient (D)",
-                    min_value=0.01, max_value=1.0, value=0.3, step=0.01,
-                    help="Move this slider -- the curve below updates instantly, no retraining.",
-                    label_visibility="collapsed",
-                    key="instant_D_slider",
-                )
-
-                if use_structure_D_instant and auto_D_instant is not None:
-                    D_instant = auto_D_instant
-
-                release_speed_instant = (
-                    "slow release" if D_instant < 0.33
-                    else "moderate release" if D_instant < 0.66
-                    else "fast release"
-                )
-                readout("D", f"{D_instant:.2f}", release_speed_instant)
-
-                compare_with_pinn = st.checkbox(
-                    "Also show the PINN's live-trained curve for the same D (slower, for comparison)",
-                    value=False,
-                    disabled=not _parsed_ok,
-                )
-
-                if eval_results is not None:
-                    info_grid(
-                        [
-                            ("Held-out MAE", f"{eval_results['mae']:.4f}"),
-                            ("Held-out R²", f"{eval_results['r2']:.3f}"),
-                            ("Unseen D values", str(len(eval_results["D_values_tested"]))),
-                        ],
-                        mono_keys=("Held-out MAE", "Held-out R²", "Unseen D values"),
-                    )
-
-        with col_instant:
-            with card("instant-curve", accent=True):
-                card_header("Release curve", "DeepONet forward pass at the slab center")
-                if not _parsed_ok:
-                    empty_state("Enter a valid SMILES string above to see a release curve.")
-                else:
-                    try:
-                        t_plot, C_deeponet = deeponet_release_curve(D_instant)
-
-                        fig, ax = plt.subplots(figsize=(7, 4.2), dpi=120)
-                        ax.plot(t_plot, C_deeponet, linewidth=2.5, color=CURVE_PRIMARY,
-                                label="DeepONet (instant)")
-                        ax.fill_between(t_plot, C_deeponet, alpha=0.12, color=CURVE_PRIMARY)
-
-                        if compare_with_pinn:
-                            with st.spinner("Training PINN for comparison... (about 20-30 seconds)"):
-                                _, C_pinn = _cached_pinn_release_curve(round(D_instant, 2))
-                            ax.plot(t_plot, C_pinn, linewidth=2, color=CURVE_SECONDARY, linestyle="--",
-                                    label="PINN (live-trained)")
-
-                        style_release_axes(fig, ax, f"Instant release curve: {polymer_name} (D={D_instant:.2f})", legend=True)
-                        st.pyplot(fig)
-                        plt.close(fig)
-
-                        callout(
-                            "<b>How to read this:</b> the solid emerald curve is the "
-                            "DeepONet's instant prediction. If you enabled the "
-                            "comparison, the dashed amber curve is what the Phase 3 PINN "
-                            "predicts after training from scratch for this same D "
-                            "&mdash; the two should look similar, illustrating the "
-                            "speed/accuracy tradeoff described above."
-                        )
-                    except Exception:
-                        st.error("⚠ The instant prediction could not complete. Please try a different SMILES string or D value.")
-
-with tab3:
-    section_header(
-        "Project overview",
-        "About this project",
-        "A from-scratch ML project predicting polymer properties from molecular structure, built in four phases.",
-    )
+    block_title("Key features")
     _phase4_eval = load_deeponet_eval_results()
     if _phase4_eval is not None:
         _phase4_result = (
@@ -1550,6 +1639,18 @@ with tab3:
          _phase4_result),
     ])
 
+    _md(
+        '<div class="pil-feature-grid" style="margin-top:0.75rem">'
+        '<div class="pil-feature"><div class="icon">🌡</div><div class="name">Tg prediction</div>'
+        '<div class="desc">XGBoost and GNN predictions with their 50/50 ensemble and a glassy → rubber-like scale.</div></div>'
+        '<div class="pil-feature"><div class="icon">💊</div><div class="name">Drug release curves</div>'
+        '<div class="desc">Instant DeepONet curve, with an optional live-trained PINN overlay for the same D.</div></div>'
+        '<div class="pil-feature"><div class="icon">📋</div><div class="name">Batch predictions</div>'
+        '<div class="desc">Predict Tg for many SMILES at once and download the results as CSV.</div></div>'
+        "</div>"
+    )
+
+    block_title("Project details")
     col_left, col_right = st.columns(2, gap="medium")
     with col_left:
         with card("about-data"):
@@ -1572,7 +1673,7 @@ with tab3:
         with card("about-stack"):
             card_header("Technology stack")
             tags(["RDKit", "scikit-learn", "XGBoost", "PyTorch", "PyTorch Geometric",
-                     "pandas", "NumPy", "matplotlib", "Streamlit", "React + Vite"])
+                     "pandas", "NumPy", "matplotlib", "Streamlit"])
         with card("about-limits"):
             card_header("Known limitations")
             bullet_list([
@@ -1588,58 +1689,210 @@ with tab3:
         with st.container(key="pil-architecture"):
             st.image(os.path.join(os.path.dirname(__file__), "docs", "architecture.svg"), width="stretch")
 
-    st.caption(
-        "The drug-release D shown in the Drug Release tab is a "
-        "permeability-derived proxy, not a literal drug-diffusion "
-        "coefficient. See the GitHub README for full methodology and "
-        "limitations."
+
+# ===========================================================================
+# Page 2 -- Calculations (all inputs + one Calculate button)
+# ===========================================================================
+elif page == "calculate":
+    page_heading(
+        "Step 2 of 3",
+        "Calculations",
+        "Choose a polymer, set the diffusion parameters and, optionally, a batch of SMILES. "
+        "Calculate runs every model and opens the results.",
     )
 
-with tab5:
-    section_header(
-        "Phase 1 — XGBoost at scale",
-        "Batch Tg prediction",
-        "Paste multiple SMILES strings, one per line, to predict Tg for all of them at once.",
-    )
+    # ---- Polymer input + structure preview ----
+    with card("selection", accent=True):
+        col_input, col_structure = st.columns([1.8, 1], gap="large")
 
-    col_batch, col_format = st.columns([1.65, 1], gap="medium")
-    with col_batch:
-        with card("batch-input"):
-            card_header("SMILES list", "One repeat-unit SMILES per line.")
-            batch_input = st.text_area(
-                "SMILES (one per line)",
-                value="CC(c1ccccc1)C\nCC\nCC(C)(C(=O)OC)C",
-                height=150,
+        with col_input:
+            card_header(
+                "Polymer input",
+                "Choose a known polymer or paste a repeat-unit SMILES. Tg and drug release both use this structure.",
+            )
+            field_label("Polymer")
+            dropdown_options = list(EXAMPLE_POLYMERS.keys()) + [CUSTOM_LABEL]
+            st.selectbox(
+                "Select polymer",
+                dropdown_options,
+                key="polymer_choice",
+                on_change=_apply_dropdown_choice,
                 label_visibility="collapsed",
             )
-            batch_clicked = st.button(
-                "Predict all",
-                key="batch_button",
-                type="primary",
-                width="stretch",
-                icon=":material/playlist_play:",
+
+            field_label("Quick examples")
+            with st.container(horizontal=True, gap="small", key="pil-chips"):
+                for label, smiles in EXAMPLE_POLYMERS.items():
+                    st.button(
+                        label,
+                        key=f"example_{label}",
+                        on_click=_use_example_chip,
+                        args=(label, smiles),
+                        type="primary" if st.session_state.polymer_choice == label else "secondary",
+                    )
+
+            field_label("Repeat-unit SMILES")
+            smiles_input = st.text_input(
+                "Repeat-unit SMILES",
+                key="smiles_value",
+                help="The polymer's repeat-unit structure as a SMILES string.",
+                label_visibility="collapsed",
+                placeholder="e.g. CC(c1ccccc1)C",
             )
-    with col_format:
-        with card("batch-format"):
-            card_header("Format")
+
+            _parsed_ok = bool(smiles_input) and Chem.MolFromSmiles(smiles_input) is not None
+            if smiles_input and _parsed_ok:
+                badge("✓ Valid SMILES — ready to predict", ok=True)
+            elif smiles_input and not _parsed_ok:
+                badge("⚠ Invalid SMILES — please enter a valid molecular structure", ok=False)
+            else:
+                hint("Select an example or type a SMILES string above.")
+
+        with col_structure:
+            with st.container(key="pil-structure"):
+                field_label("Structure preview")
+                img = render_molecule_image(smiles_input, size=(360, 260)) if _parsed_ok else None
+                if img is not None:
+                    st.image(img, width="stretch")
+                    mol_caption(smiles_input)
+                elif _parsed_ok:
+                    empty_state("Structure preview unavailable for this input.", compact=True)
+                else:
+                    empty_state("Enter a valid SMILES string to preview its 2D structure.", compact=True)
+
+    polymer_name = st.session_state.polymer_choice if st.session_state.polymer_choice != CUSTOM_LABEL else "this polymer"
+
+    col_release, col_batch = st.columns(2, gap="medium")
+
+    # ---- Drug release parameters (shared by the DeepONet and the PINN) ----
+    with col_release:
+        with card("release-params"):
+            card_header(
+                "Drug release parameters",
+                "Effective diffusion coefficient for the release simulation.",
+            )
+            # Structure-driven D (Phase 3 permeability model), if available
+            auto_D = get_structure_driven_D(smiles_input, _parsed_ok)
+            if auto_D is not None:
+                st.info(
+                    f"🔬 Predicted CO₂ permeability suggests an effective diffusion "
+                    f"coefficient of **D ≈ {auto_D:.2f}**. This is derived from the "
+                    f"structure's predicted permeability as a physically-related "
+                    f"proxy — not a literally measured drug-diffusion coefficient."
+                )
+
+            st.session_state.setdefault("use_structure_D", auto_D is not None)
+            use_structure_D = st.checkbox(
+                "Use structure-predicted D",
+                disabled=(auto_D is None),
+                key="use_structure_D",
+            )
+
+            field_label("Effective diffusion coefficient (D)")
+            D_value = st.slider(
+                "Effective diffusion coefficient (D)",
+                min_value=0.01, max_value=1.0, step=0.01,
+                help="Higher D = faster release. In the full project this comes from a permeability model; here it's a direct slider so you can explore.",
+                label_visibility="collapsed",
+                key="D_slider",
+            )
+
+            if use_structure_D and auto_D is not None:
+                D_value = auto_D
+
+            release_speed = "slow release" if D_value < 0.33 else "moderate release" if D_value < 0.66 else "fast release"
+            readout("D", f"{D_value:.2f}", release_speed)
+
+            train_pinn_too = st.checkbox(
+                "Also train the PINN live for this D (about 20–30 seconds)",
+                disabled=not deeponet_ready,  # without the DeepONet, the PINN is the only release model
+                key="train_pinn",
+                help="The DeepONet gives the curve instantly. The PINN trains from scratch for this exact D, "
+                     "as a slower comparison. Curves are cached per D value.",
+            )
+            if not deeponet_ready:
+                hint("The DeepONet model wasn't found (models/deeponet_diffusion.pt), so the release curve comes from the PINN.")
+
+    # ---- Batch input ----
+    with col_batch:
+        with card("batch-input"):
+            card_header("Batch Tg prediction", "Optional: one repeat-unit SMILES per line. Leave empty to skip.")
+            batch_input = st.text_area(
+                "SMILES (one per line)",
+                height=150,
+                label_visibility="collapsed",
+                key="batch_text",
+            )
             info_grid(
                 [
-                    ("Input", "Plain text, one SMILES per line"),
-                    ("Blank lines", "Ignored"),
                     ("Model", "XGBoost (Phase 1)"),
-                    ("Invalid SMILES", "Kept, flagged in Status"),
+                    ("Blank lines", "Ignored"),
+                    ("Invalid SMILES", "Kept, flagged"),
                     ("Export", "tg_predictions.csv"),
                 ],
                 mono_keys=("Export",),
             )
 
-    if batch_clicked:
-        with card("batch-results", accent=True):
-            card_header("Results")
+    # ---- Calculate ----
+    with st.container(key="pil-cta"):
+        calculate_clicked = st.button(
+            "Calculate",
+            key="calculate_button",
+            disabled=not _parsed_ok,
+            type="primary",
+            icon=":material/calculate:",
+        )
+    if not _parsed_ok:
+        _md('<p class="pil-hint pil-on-bg" style="text-align:center">Enter a valid SMILES string above to enable Calculate.</p>')
+
+    if calculate_clicked and _parsed_ok:
+        run = {
+            "smiles": smiles_input,
+            "name": polymer_name,
+            "D": float(D_value),
+            "D_from_structure": bool(use_structure_D and auto_D is not None),
+            "tg": None, "tg_error": False,
+            "deeponet": None, "pinn": None, "release_error": False,
+            "batch": None,
+        }
+
+        # Tg: Phase 1 XGBoost, Phase 2 GNN when available, and their ensemble.
+        with st.spinner("Analyzing molecular structure..."):
+            try:
+                X = featurize_smiles(smiles_input)
+                if X is None:
+                    raise ValueError("Could not parse this SMILES string.")
+                model = load_tg_model()
+                xgb_pred = float(model.predict(X)[0])
+
+                gnn_pred = None
+                if GNN_AVAILABLE and os.path.exists("models/gnn_tg.pt"):
+                    try:
+                        gnn_model = load_gnn_model()
+                        gnn_pred = predict_gnn_tg(smiles_input, gnn_model)
+                    except Exception:
+                        gnn_pred = None
+
+                ensemble_pred = (xgb_pred + gnn_pred) / 2 if gnn_pred is not None else None
+                run["tg"] = {"value": xgb_pred, "gnn_value": gnn_pred, "ensemble_value": ensemble_pred}
+            except Exception:
+                run["tg_error"] = True
+
+        # Drug release: instant DeepONet curve, plus the live-trained PINN if requested.
+        try:
+            if deeponet_ready:
+                run["deeponet"] = deeponet_release_curve(D_value)
+            if train_pinn_too or not deeponet_ready:
+                with st.spinner("Training physics-informed model... (about 20-30 seconds)"):
+                    run["pinn"] = _cached_pinn_release_curve(round(D_value, 2))
+        except Exception:
+            run["release_error"] = True
+
+        # Batch Tg (Phase 1 XGBoost), if any SMILES were given.
+        lines = [line.strip() for line in batch_input.split("\n") if line.strip()]
+        if lines:
             with st.spinner("Predicting Tg for each SMILES..."):
                 model = load_tg_model()
-                lines = [line.strip() for line in batch_input.split("\n") if line.strip()]
-
                 results = []
                 for smi in lines:
                     X = featurize_smiles(smi)
@@ -1648,8 +1901,143 @@ with tab5:
                     else:
                         pred = model.predict(X)[0]
                         results.append({"SMILES": smi, "Predicted Tg (°C)": round(float(pred), 1), "Status": "OK"})
+            run["batch"] = pd.DataFrame(results)
 
-            results_df = pd.DataFrame(results)
+        st.session_state["last_run"] = run
+        go_to("results")
+        st.rerun()
+
+
+# ===========================================================================
+# Page 3 -- Results
+# ===========================================================================
+elif page == "results":
+    run = st.session_state.get("last_run")
+    page_heading(
+        "Step 3 of 3",
+        "Results",
+        "Predicted glass transition temperature, the drug release curve and any batch predictions "
+        "for the inputs you calculated.",
+    )
+
+    if run is None:
+        empty_state("No results yet. Set up a polymer on the Calculations page and press Calculate.")
+        with st.container(key="pil-cta"):
+            st.button("Go to Calculations", key="to_calc_empty", type="primary",
+                      icon=":material/arrow_back:", on_click=go_to, args=("calculate",))
+    else:
+        D_note = "structure-predicted" if run["D_from_structure"] else "manual"
+        _md(
+            '<div class="pil-run">'
+            f'<span>Polymer <span class="v">{esc(run["name"])}</span></span>'
+            f'<span>SMILES <span class="v mono">{esc(run["smiles"])}</span></span>'
+            f'<span>D <span class="v mono">{run["D"]:.2f}</span> ({D_note})</span>'
+            "</div>"
+        )
+
+        # ---- Glass transition temperature ----
+        block_title("Glass transition temperature")
+        if run["tg_error"] or run["tg"] is None:
+            st.error("⚠ Something went wrong generating this prediction. Please try a different SMILES string.")
+        else:
+            tg = run["tg"]
+            pred = tg["value"]
+            # Map Tg onto a fixed, clearly-labeled visual scale. Purely a display
+            # aid -- the underlying predicted value is used as-is everywhere else.
+            scale_min, scale_max = -150.0, 250.0
+            pct = max(0.0, min(1.0, (pred - scale_min) / (scale_max - scale_min))) * 100
+
+            col_result, col_models, col_mol = st.columns([1.35, 1, 0.9], gap="medium")
+            with col_result:
+                result_card(
+                    "Predicted glass transition temperature",
+                    f"{pred:.1f}",
+                    "°C",
+                    f"{esc(run['name'])} · XGBoost (Phase 1)",
+                    scale=(pct, scale_min, scale_max),
+                )
+            with col_models:
+                # Multi-model comparison (Phase 1 XGBoost, Phase 2 GNN, ensemble)
+                if tg.get("gnn_value") is not None:
+                    st.metric("XGBoost (Phase 1)", f"{tg['value']:.1f} °C")
+                    st.metric("GNN (Phase 2)", f"{tg['gnn_value']:.1f} °C")
+                    st.metric("Ensemble average", f"{tg['ensemble_value']:.1f} °C")
+                else:
+                    st.metric("XGBoost (Phase 1)", f"{tg['value']:.1f} °C")
+                    st.info("ℹ️ The Phase 2 GNN model wasn't found, so only the XGBoost prediction is shown.")
+            with col_mol:
+                with st.container(key="pil-structure"):
+                    img = render_molecule_image(run["smiles"], size=(360, 260))
+                    if img is not None:
+                        st.image(img, width="stretch")
+                        mol_caption(run["smiles"])
+
+            callout(
+                "<b>What this means:</b> below the glass transition temperature, "
+                "the polymer behaves more like a rigid glass. Above it, the "
+                "polymer becomes softer and more rubber-like. Prediction from an "
+                "XGBoost model trained on Morgan fingerprints (Phase 1)."
+            )
+
+        # ---- Drug release ----
+        block_title("Drug release")
+        if run["release_error"]:
+            st.error("⚠ The simulation could not complete. Please try again or adjust the diffusion coefficient.")
+        elif run["deeponet"] is None and run["pinn"] is None:
+            empty_state("No release curve was calculated.", compact=True)
+        else:
+            col_curve, col_info = st.columns([1.65, 1], gap="medium")
+            with col_curve:
+                with card("release-curve", accent=True):
+                    card_header("Release curve", "Concentration at the slab center over time")
+                    curves = []
+                    if run["deeponet"] is not None:
+                        t_plot, C_deeponet = run["deeponet"]
+                        curves.append((t_plot, C_deeponet, "DeepONet (instant)", CURVE_PRIMARY, False))
+                    if run["pinn"] is not None:
+                        t_plot, C_pinn = run["pinn"]
+                        # Dashed comparison when the DeepONet curve is also shown
+                        curves.append((t_plot, C_pinn, "PINN (live-trained)",
+                                       CURVE_SECONDARY if curves else CURVE_PRIMARY, bool(curves)))
+                    plot_release_curves(curves, f"Predicted release curve: {run['name']} (D={run['D']:.2f})")
+            with col_info:
+                with card("release-info"):
+                    card_header("How to read this")
+                    if run["deeponet"] is not None and run["pinn"] is not None:
+                        how = ("The solid cyan curve is the DeepONet's instant prediction; the dashed "
+                               "violet curve is the PINN trained from scratch for this same D. The two "
+                               "should look similar, illustrating the speed/accuracy tradeoff.")
+                    else:
+                        how = ("The curve shows how much drug concentration remains at the center of the "
+                               "polymer slab over time. A steep early drop means fast initial release; "
+                               "a curve that flattens out means release has mostly finished.")
+                    _md(f'<p class="pil-hint" style="line-height:1.6">{how}</p>')
+                    eval_results = load_deeponet_eval_results() if run["deeponet"] is not None else None
+                    if eval_results is not None:
+                        info_grid(
+                            [
+                                ("Held-out MAE", f"{eval_results['mae']:.4f}"),
+                                ("Held-out R²", f"{eval_results['r2']:.3f}"),
+                                ("Unseen D values", str(len(eval_results["D_values_tested"]))),
+                            ],
+                            mono_keys=("Held-out MAE", "Held-out R²", "Unseen D values"),
+                        )
+                    if run["pinn"] is not None:
+                        info_grid(
+                            [("Adam epochs", "800"), ("L-BFGS rounds", "5"), ("Probe point", "x = 0.5"), ("Time span", "0 – 5")],
+                            mono_keys=("Adam epochs", "L-BFGS rounds", "Probe point", "Time span"),
+                        )
+                        hint("The PINN uses a reduced, faster training run than the fully validated "
+                             "version: treat its curve's shape as illustrative, not precise.")
+            st.caption(
+                "The drug-release D is a permeability-derived proxy, not a literal "
+                "drug-diffusion coefficient. See the GitHub README for full methodology and limitations."
+            )
+
+        # ---- Batch ----
+        if run["batch"] is not None:
+            block_title("Batch Tg predictions")
+            results_df = run["batch"]
             n_valid = (results_df["Status"] == "OK").sum()
             n_invalid = len(results_df) - n_valid
 
@@ -1667,6 +2055,10 @@ with tab5:
             csv = results_df.to_csv(index=False).encode("utf-8")
             st.download_button("Download results as CSV", csv, "tg_predictions.csv", "text/csv",
                                icon=":material/download:")
+
+        with st.container(key="pil-cta"):
+            st.button("Edit inputs and recalculate", key="to_calc", type="secondary",
+                      icon=":material/arrow_back:", on_click=go_to, args=("calculate",))
 
 footer(
     "Built as a learning project: Classical ML → Graph Neural Networks → "

@@ -16,17 +16,16 @@ run, and the app is deployed on Streamlit Community Cloud.**
 
 ## Web app
 
-The Streamlit app (`app.py`) puts the trained models behind one interface.
-Pick an example polymer or type a repeat-unit SMILES string, then use the
-tabs:
+The Streamlit app (`app.py`) puts the trained models behind one interface,
+as a three-step flow over a full-page interactive particle background (the
+"Quantum Swarm": it reacts to the mouse, clicks send shockwaves, and a
+**Motion** toggle in the top bar pauses it):
 
-| Tab | What it does |
+| Page | What it does |
 |---|---|
-| 🌡 Glass Transition Temperature | Predicts Tg with XGBoost (Phase 1) and the GNN (Phase 2), plus their 50/50 ensemble, and shows the 2D molecular structure |
-| 💊 Drug Release | Trains a PINN (Phase 3) live for the chosen diffusion coefficient D and plots the concentration release curve (cached, so repeated D values are instant) |
-| ⚡ Instant Prediction (Neural Operator) | Uses the pre-trained DeepONet (Phase 4) to produce the release curve in a single forward pass, with no per-D training |
-| 📖 About | Summary table of every phase's results (the Phase 4 numbers are read from `results/deeponet_evaluation.json`) |
-| 📋 Batch | Predicts Tg for many SMILES at once (one per line) and lets you download the results as CSV |
+| 01 · Overview | Project title, introduction, objectives, the four phases and their results (the Phase 4 numbers are read from `results/deeponet_evaluation.json`), dataset, rigor checks and limitations. **Start** opens the Calculations page |
+| 02 · Calculations | Pick an example polymer or type a repeat-unit SMILES (with a live 2D structure preview), set the diffusion coefficient D (manual, or structure-predicted where available), optionally ask for a live-trained PINN, and optionally paste a batch of SMILES. **Calculate** runs every model and opens Results |
+| 03 · Results | Tg from XGBoost (Phase 1) and the GNN (Phase 2) plus their 50/50 ensemble; the drug release curve from the pre-trained DeepONet (Phase 4), with the PINN (Phase 3) overlaid when requested (PINN curves are cached per D); and the batch Tg table with a CSV download |
 
 ### Run the app locally
 
