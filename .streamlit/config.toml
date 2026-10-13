@@ -1,20 +1,20 @@
-# Native Streamlit theme for the "Polymer Intelligence Lab" design system.
-# Widgets (inputs, sliders, tabs, alerts, dataframes, metrics) pick these up
-# directly, so ui_theme.py only needs CSS for the custom HTML pieces.
-# Keep in sync with ui_theme.TOKENS and frontend/src/lib/design-tokens.ts.
+# Native Streamlit theme for the "Polymer Intelligence Lab" design system
+# ("lab notebook": warm paper, navy-blue ink, signal orange). Widgets (inputs,
+# sliders, alerts, dataframes, metrics) pick these up directly, so app.py only
+# needs CSS for the custom HTML pieces. Keep in sync with TOKENS in app.py.
 
 [theme]
-base = "dark"
-primaryColor = "#22D3EE"
-backgroundColor = "#080B14"
-secondaryBackgroundColor = "#111827"
-textColor = "#F1F5F9"
-linkColor = "#22D3EE"
-borderColor = "#263449"
+base = "light"
+primaryColor = "#1D4ED8"
+backgroundColor = "#F6F5F1"
+secondaryBackgroundColor = "#EFEDE6"
+textColor = "#14213D"
+linkColor = "#1D4ED8"
+borderColor = "#DAD7CE"
 showWidgetBorder = true
-dataframeBorderColor = "#263449"
-dataframeHeaderBackgroundColor = "#151D2E"
-codeBackgroundColor = "#0D1220"
+dataframeBorderColor = "#DAD7CE"
+dataframeHeaderBackgroundColor = "#F9F8F5"
+codeBackgroundColor = "#EFEDE6"
 baseRadius = "10px"
 buttonRadius = "10px"
 
@@ -22,10 +22,11 @@ font = "Geist:https://fonts.googleapis.com/css2?family=Geist:wght@300..800&displ
 headingFont = "Geist, sans-serif"
 codeFont = "Geist Mono:https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400..600&display=swap, monospace"
 
-blueColor = "#22D3EE"
-violetColor = "#8B5CF6"
-yellowColor = "#FBBF24"
-greenColor = "#34D399"
-redColor = "#FB7185"
+blueColor = "#1D4ED8"
+violetColor = "#6D28D9"
+orangeColor = "#EA580C"
+yellowColor = "#B45309"
+greenColor = "#15803D"
+redColor = "#B91C1C"
 
-chartCategoricalColors = ["#22D3EE", "#A78BFA", "#FBBF24", "#34D399", "#FB7185"]
+chartCategoricalColors = ["#1D4ED8", "#EA580C", "#15803D", "#DC2626", "#5B6475"]

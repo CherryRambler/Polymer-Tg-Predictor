@@ -97,25 +97,25 @@ CUSTOM_LABEL = "Custom / paste your own SMILES"
 # (which never actually wraps the widgets in between).
 # ---------------------------------------------------------------------------
 TOKENS = {
-    # Surfaces
-    "bg": "#080B14",
-    "bg-2": "#0D1220",
-    "surface": "#111827",
-    "surface-2": "#151D2E",
-    "border": "#263449",
-    "border-strong": "#33476A",
-    # Accents
-    "cyan": "#22D3EE",
-    "violet": "#8B5CF6",
-    "violet-soft": "#A78BFA",
-    "amber": "#FBBF24",
+    # Surfaces ("lab notebook": warm paper, white sheets)
+    "bg": "#F6F5F1",
+    "bg-2": "#EFEDE6",
+    "surface": "#FFFFFF",
+    "surface-2": "#F9F8F5",
+    "border": "#DAD7CE",
+    "border-strong": "#C4C0B4",
+    # Accents: navy-blue ink, signal orange, red (hot end of the Tg scale)
+    "accent": "#1D4ED8",
+    "accent-2": "#EA580C",
+    "accent-2-soft": "#F97316",
+    "accent-3": "#DC2626",
     # Text
-    "text": "#F1F5F9",
-    "text-muted": "#94A3B8",
-    "text-faint": "#64748B",
+    "text": "#14213D",
+    "text-muted": "#5B6475",
+    "text-faint": "#8A909C",
     # Status
-    "success": "#34D399",
-    "error": "#FB7185",
+    "success": "#15803D",
+    "error": "#B91C1C",
     # Shape
     "radius-sm": "8px",
     "radius": "12px",
@@ -126,8 +126,8 @@ TOKENS = {
 }
 
 # Chart series colors -- shared by every matplotlib figure in the app.
-CURVE_PRIMARY = TOKENS["cyan"]
-CURVE_SECONDARY = TOKENS["violet-soft"]
+CURVE_PRIMARY = TOKENS["accent"]
+CURVE_SECONDARY = TOKENS["accent-2"]
 
 _CSS = """
 /* ---------- Page canvas + full-viewport background layer ---------- */
@@ -162,7 +162,7 @@ _CSS = """
 }
 #MainMenu, footer, header { visibility: hidden; }
 /* Text that sits straight on the animated background gets a soft halo */
-.pil-on-bg { text-shadow: 0 1px 16px rgba(8, 11, 20, 0.9), 0 0 2px rgba(8, 11, 20, 0.8); }
+.pil-on-bg { text-shadow: 0 1px 16px rgba(246, 245, 241, 0.9), 0 0 2px rgba(246, 245, 241, 0.8); }
 
 /* ---------- Typography primitives ---------- */
 .pil-mono { font-family: var(--pil-font-mono); }
@@ -172,7 +172,7 @@ _CSS = """
     font-weight: 500;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--pil-cyan);
+    color: var(--pil-accent);
 }
 .pil-label {
     font-size: 0.7rem;
@@ -199,7 +199,7 @@ _CSS = """
     font-size: 0.7rem;
     letter-spacing: 0.04em;
     color: var(--pil-text-muted);
-    background: rgba(17, 24, 39, 0.7);
+    background: rgba(255, 255, 255, 0.7);
     border: 1px solid var(--pil-border);
     border-radius: 999px;
     padding: 0.28rem 0.7rem 0.28rem 0.55rem;
@@ -210,14 +210,14 @@ _CSS = """
     height: 7px;
     border-radius: 50%;
     background: var(--pil-success);
-    box-shadow: 0 0 8px rgba(52, 211, 153, 0.6);
+    box-shadow: 0 0 8px rgba(21, 128, 61, 0.6);
 }
 .pil-status-item.ok .dot::after {
     content: "";
     position: absolute;
     inset: -3px;
     border-radius: 50%;
-    border: 1px solid rgba(52, 211, 153, 0.55);
+    border: 1px solid rgba(21, 128, 61, 0.55);
     animation: pil-pulse 2.6s ease-out infinite;
 }
 .pil-status-item.off { color: var(--pil-text-faint); }
@@ -246,7 +246,7 @@ _CSS = """
     border-radius: var(--pil-radius);
     border: 1px solid var(--pil-border);
     background:
-        radial-gradient(circle at 30% 20%, rgba(34, 211, 238, 0.16), transparent 70%),
+        radial-gradient(circle at 30% 20%, rgba(29, 78, 216, 0.16), transparent 70%),
         var(--pil-surface);
 }
 .pil-section-title {
@@ -269,22 +269,22 @@ _CSS = """
    Each section gets its own translucent glass panel -- just enough contrast
    to read text over the moving particles; never one card around the page. */
 [class*="st-key-pil-card-"], [class*="st-key-pil-accent-"] {
-    background: rgba(13, 18, 32, 0.68);
+    background: rgba(255, 255, 255, 0.68);
     -webkit-backdrop-filter: blur(10px) saturate(120%);
     backdrop-filter: blur(10px) saturate(120%);
-    border-color: rgba(51, 71, 106, 0.7) !important;
+    border-color: rgba(196, 192, 180, 0.7) !important;
     border-radius: var(--pil-radius-lg) !important;
     padding: 1.2rem 1.3rem !important;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 14px 32px -18px rgba(0, 0, 0, 0.7);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 14px 32px -18px rgba(20, 33, 61, 0.10);
     transition: border-color 0.2s ease;
 }
 [class*="st-key-pil-card-"]:hover { border-color: var(--pil-border-strong) !important; }
-/* Emphasized panel: thin luminous cyan->violet edge along the top */
+/* Emphasized panel: thin blue->orange edge along the top */
 [class*="st-key-pil-accent-"] {
     background:
-        linear-gradient(90deg, rgba(34, 211, 238, 0.7), rgba(139, 92, 246, 0.7)) top / 100% 1px no-repeat,
-        radial-gradient(600px 160px at 0% 0%, rgba(34, 211, 238, 0.06), transparent 70%),
-        rgba(13, 18, 32, 0.74);
+        linear-gradient(90deg, rgba(29, 78, 216, 0.7), rgba(234, 88, 12, 0.7)) top / 100% 1px no-repeat,
+        radial-gradient(600px 160px at 0% 0%, rgba(29, 78, 216, 0.06), transparent 70%),
+        rgba(255, 255, 255, 0.74);
     border-color: var(--pil-border-strong) !important;
 }
 .pil-card-head {
@@ -299,8 +299,8 @@ _CSS = """
     height: 8px;
     margin-top: 0.42rem;
     border-radius: 50%;
-    background: var(--pil-cyan);
-    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15), 0 0 10px rgba(34, 211, 238, 0.5);
+    background: var(--pil-accent);
+    box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15), 0 0 10px rgba(29, 78, 216, 0.5);
 }
 .pil-card-title {
     font-size: 0.98rem;
@@ -317,19 +317,19 @@ _CSS = """
 
 /* ---------- Buttons ---------- */
 [data-testid="stBaseButton-primary"] {
-    background: linear-gradient(135deg, #22D3EE 0%, #38BDF8 100%);
-    color: #04121A;
-    border: 1px solid rgba(34, 211, 238, 0.9);
+    background: linear-gradient(135deg, #1D4ED8 0%, #2563EB 100%);
+    color: #FFFFFF;
+    border: 1px solid rgba(29, 78, 216, 0.9);
     font-weight: 600;
     min-height: 2.6rem;
-    box-shadow: 0 6px 20px -8px rgba(34, 211, 238, 0.55);
+    box-shadow: 0 6px 20px -8px rgba(29, 78, 216, 0.55);
     transition: box-shadow 0.18s ease, transform 0.18s ease, filter 0.18s ease;
 }
 [data-testid="stBaseButton-primary"]:hover {
-    color: #04121A;
-    border-color: #67E8F9;
+    color: #FFFFFF;
+    border-color: #3B82F6;
     filter: brightness(1.06);
-    box-shadow: 0 8px 26px -8px rgba(34, 211, 238, 0.75);
+    box-shadow: 0 8px 26px -8px rgba(29, 78, 216, 0.75);
     transform: translateY(-1px);
 }
 [data-testid="stBaseButton-primary"]:active { transform: translateY(0); }
@@ -349,12 +349,12 @@ _CSS = """
     transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
 }
 [data-testid="stBaseButton-secondary"]:hover {
-    border-color: rgba(34, 211, 238, 0.6);
-    color: #A5F3FC;
-    background: #17213A;
+    border-color: rgba(29, 78, 216, 0.6);
+    color: #1E40AF;
+    background: #EEF2FF;
 }
 .stButton button:focus-visible, .stDownloadButton button:focus-visible {
-    outline: 2px solid var(--pil-cyan);
+    outline: 2px solid var(--pil-accent);
     outline-offset: 2px;
 }
 
@@ -369,10 +369,10 @@ _CSS = """
 .st-key-pil-chips button p { font-size: 0.8rem; }
 .st-key-pil-chips [data-testid="stBaseButton-primary"],
 .st-key-pil-chips [data-testid="stBaseButton-primary"]:hover {
-    background: rgba(34, 211, 238, 0.12);
-    color: #A5F3FC;
-    border-color: rgba(34, 211, 238, 0.65);
-    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.08);
+    background: rgba(29, 78, 216, 0.12);
+    color: #1E40AF;
+    border-color: rgba(29, 78, 216, 0.65);
+    box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.08);
     transform: none;
     filter: none;
 }
@@ -384,7 +384,7 @@ _CSS = """
 }
 .stTextInput [data-baseweb="input"]:focus-within,
 .stTextArea [data-baseweb="textarea"]:focus-within {
-    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.16);
+    box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.16);
 }
 /* SMILES are chemistry, not prose: monospace wherever they are typed */
 .st-key-smiles_value input, .st-key-pil-card-batch-input textarea {
@@ -395,7 +395,7 @@ _CSS = """
 /* ---------- Tabs: segmented navigation (ARIA roles: stable across versions) ---------- */
 .stTabs [role="tablist"] {
     gap: 0.25rem;
-    background: rgba(13, 18, 32, 0.85);
+    background: rgba(255, 255, 255, 0.85);
     border: 1px solid var(--pil-border);
     padding: 0.3rem;
     border-radius: var(--pil-radius);
@@ -412,19 +412,19 @@ _CSS = """
     transition: background 0.18s ease, color 0.18s ease;
 }
 .stTabs [role="tab"] p { font-size: 0.86rem; font-weight: 550; white-space: nowrap; }
-.stTabs [role="tab"]:hover { color: var(--pil-text); background: rgba(21, 29, 46, 0.8); }
+.stTabs [role="tab"]:hover { color: var(--pil-text); background: rgba(249, 248, 245, 0.8); }
 .stTabs [role="tab"][aria-selected="true"] {
     background: var(--pil-surface-2);
-    color: #A5F3FC;
-    box-shadow: inset 0 0 0 1px var(--pil-border-strong), inset 0 -2px 0 var(--pil-cyan);
+    color: #1E40AF;
+    box-shadow: inset 0 0 0 1px var(--pil-border-strong), inset 0 -2px 0 var(--pil-accent);
 }
-.stTabs [role="tab"][aria-selected="true"] p { color: #A5F3FC; }
-.stTabs [role="tab"]:focus-visible { outline: 2px solid var(--pil-cyan); outline-offset: 1px; }
+.stTabs [role="tab"][aria-selected="true"] p { color: #1E40AF; }
+.stTabs [role="tab"]:focus-visible { outline: 2px solid var(--pil-accent); outline-offset: 1px; }
 .stTabs [role="tabpanel"] { padding-top: 1rem; }
 
 /* ---------- Metrics, expanders, images ---------- */
 [data-testid="stMetric"] {
-    background: rgba(8, 11, 20, 0.55);
+    background: rgba(246, 245, 241, 0.55);
     border: 1px solid var(--pil-border);
     border-radius: var(--pil-radius);
     padding: 0.7rem 0.9rem;
@@ -444,23 +444,21 @@ _CSS = """
 [data-testid="stExpander"] details {
     border-color: var(--pil-border);
     border-radius: var(--pil-radius);
-    background: rgba(17, 24, 39, 0.6);
+    background: rgba(255, 255, 255, 0.6);
 }
 .st-key-pil-architecture [data-testid="stImage"] img { border-radius: 10px; }
-/* RDKit draws black-on-white PNGs. Display-only dark rendering: invert +
-   hue-rotate keeps heteroatom colors (O stays red, N blue), and the screen
-   blend lets the card surface show through the (now black) background. */
+/* RDKit draws black-on-white PNGs, which sit naturally on the white sheet;
+   multiply blends the white away so the panel tint shows through. */
 .st-key-pil-structure [data-testid="stImage"] {
     border: 1px solid var(--pil-border);
     border-radius: var(--pil-radius);
     background:
-        radial-gradient(circle at 50% 40%, rgba(34, 211, 238, 0.07), transparent 70%),
+        radial-gradient(circle at 50% 40%, rgba(29, 78, 216, 0.07), transparent 70%),
         var(--pil-bg-2);
     padding: 0.4rem;
 }
 .st-key-pil-structure [data-testid="stImage"] img {
-    filter: invert(1) hue-rotate(180deg) brightness(1.05);
-    mix-blend-mode: screen;
+    mix-blend-mode: multiply;
     max-height: 230px;
     object-fit: contain;
 }
@@ -476,20 +474,20 @@ _CSS = """
     padding: 0.28rem 0.75rem;
     border: 1px solid transparent;
 }
-.pil-badge.ok { color: var(--pil-success); background: rgba(52, 211, 153, 0.09); border-color: rgba(52, 211, 153, 0.28); }
-.pil-badge.err { color: var(--pil-error); background: rgba(251, 113, 133, 0.09); border-color: rgba(251, 113, 133, 0.3); }
+.pil-badge.ok { color: var(--pil-success); background: rgba(21, 128, 61, 0.09); border-color: rgba(21, 128, 61, 0.28); }
+.pil-badge.err { color: var(--pil-error); background: rgba(185, 28, 28, 0.09); border-color: rgba(185, 28, 28, 0.3); }
 .pil-hint { font-size: 0.82rem; color: var(--pil-text-muted); margin: 0.1rem 0 0; }
 
 /* ---------- Primary result ---------- */
 .pil-result {
     position: relative;
     border-radius: var(--pil-radius-lg);
-    border: 1px solid rgba(34, 211, 238, 0.35);
+    border: 1px solid rgba(29, 78, 216, 0.35);
     background:
-        radial-gradient(420px 200px at 15% 0%, rgba(34, 211, 238, 0.14), transparent 70%),
-        radial-gradient(380px 200px at 100% 100%, rgba(139, 92, 246, 0.14), transparent 70%),
+        radial-gradient(420px 200px at 15% 0%, rgba(29, 78, 216, 0.14), transparent 70%),
+        radial-gradient(380px 200px at 100% 100%, rgba(234, 88, 12, 0.14), transparent 70%),
         var(--pil-bg-2);
-    box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.05), 0 18px 40px -20px rgba(34, 211, 238, 0.35);
+    box-shadow: 0 0 0 1px rgba(29, 78, 216, 0.05), 0 18px 40px -20px rgba(29, 78, 216, 0.35);
     padding: 1.2rem 1.35rem 1.1rem;
     animation: pil-rise 0.35s ease;
 }
@@ -503,7 +501,7 @@ _CSS = """
     color: var(--pil-text);
     font-variant-numeric: tabular-nums;
 }
-.pil-result-value .unit { font-size: 1.35rem; color: var(--pil-cyan); margin-left: 0.3rem; letter-spacing: 0; }
+.pil-result-value .unit { font-size: 1.35rem; color: var(--pil-accent); margin-left: 0.3rem; letter-spacing: 0; }
 .pil-result-sub { font-size: 0.83rem; color: var(--pil-text-muted); margin-top: 0.4rem; }
 @keyframes pil-rise {
     from { opacity: 0; transform: translateY(4px); }
@@ -525,7 +523,7 @@ _CSS = """
     position: relative;
     height: 6px;
     border-radius: 999px;
-    background: linear-gradient(90deg, #22D3EE 0%, #8B5CF6 55%, #FBBF24 100%);
+    background: linear-gradient(90deg, #1D4ED8 0%, #EA580C 55%, #DC2626 100%);
     opacity: 0.9;
 }
 .pil-scale-marker {
@@ -536,7 +534,7 @@ _CSS = """
     border-radius: 50%;
     background: var(--pil-text);
     border: 3px solid var(--pil-bg);
-    box-shadow: 0 0 0 1px rgba(241, 245, 249, 0.5), 0 0 12px rgba(241, 245, 249, 0.45);
+    box-shadow: 0 0 0 1px rgba(20, 33, 61, 0.5), 0 0 12px rgba(20, 33, 61, 0.45);
     transform: translate(-50%, -50%);
 }
 
@@ -545,9 +543,9 @@ _CSS = """
     font-size: 0.86rem;
     color: var(--pil-text-muted);
     line-height: 1.6;
-    background: linear-gradient(90deg, rgba(34, 211, 238, 0.07), rgba(139, 92, 246, 0.03));
+    background: linear-gradient(90deg, rgba(29, 78, 216, 0.07), rgba(234, 88, 12, 0.03));
     border: 1px solid var(--pil-border);
-    border-left: 2px solid var(--pil-cyan);
+    border-left: 2px solid var(--pil-accent);
     padding: 0.7rem 0.95rem;
     border-radius: 10px;
 }
@@ -565,9 +563,9 @@ _CSS = """
     display: inline-block;
     font-size: 0.72rem;
     font-weight: 550;
-    color: #C4B5FD;
-    background: rgba(139, 92, 246, 0.12);
-    border: 1px solid rgba(139, 92, 246, 0.3);
+    color: #C2410C;
+    background: rgba(234, 88, 12, 0.12);
+    border: 1px solid rgba(234, 88, 12, 0.3);
     border-radius: 999px;
     padding: 0.12rem 0.6rem;
 }
@@ -582,7 +580,7 @@ _CSS = """
     padding: 1.5rem;
     border: 1px dashed var(--pil-border-strong);
     border-radius: var(--pil-radius);
-    background: rgba(8, 11, 20, 0.5);
+    background: rgba(246, 245, 241, 0.5);
     color: var(--pil-text-muted);
     font-size: 0.86rem;
     line-height: 1.55;
@@ -607,11 +605,11 @@ _CSS = """
     border-radius: 999px;
     padding: 0.3rem 0.75rem;
 }
-.pil-pipeline .step:last-child { border-color: rgba(34, 211, 238, 0.5); color: #A5F3FC; }
+.pil-pipeline .step:last-child { border-color: rgba(29, 78, 216, 0.5); color: #1E40AF; }
 .pil-pipeline .link {
     width: 22px;
     height: 1px;
-    background: linear-gradient(90deg, rgba(34, 211, 238, 0.7), rgba(139, 92, 246, 0.7));
+    background: linear-gradient(90deg, rgba(29, 78, 216, 0.7), rgba(234, 88, 12, 0.7));
 }
 .pil-grid {
     display: grid;
@@ -619,7 +617,7 @@ _CSS = """
     gap: 0.55rem;
 }
 .pil-grid .item {
-    background: rgba(8, 11, 20, 0.5);
+    background: rgba(246, 245, 241, 0.5);
     border: 1px solid var(--pil-border);
     border-radius: 10px;
     padding: 0.55rem 0.75rem;
@@ -641,7 +639,7 @@ _CSS = """
     gap: 0.75rem;
 }
 .pil-phase {
-    background: rgba(13, 18, 32, 0.68);
+    background: rgba(255, 255, 255, 0.68);
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
     border: 1px solid var(--pil-border);
@@ -649,7 +647,7 @@ _CSS = """
     padding: 1rem 1.1rem;
     transition: border-color 0.2s ease, transform 0.2s ease;
 }
-.pil-phase:hover { border-color: rgba(34, 211, 238, 0.45); transform: translateY(-1px); }
+.pil-phase:hover { border-color: rgba(29, 78, 216, 0.45); transform: translateY(-1px); }
 .pil-phase .num {
     display: inline-grid;
     place-items: center;
@@ -658,9 +656,9 @@ _CSS = """
     border-radius: 8px;
     font-family: var(--pil-font-mono);
     font-size: 0.78rem;
-    color: #A5F3FC;
-    background: rgba(34, 211, 238, 0.1);
-    border: 1px solid rgba(34, 211, 238, 0.35);
+    color: #1E40AF;
+    background: rgba(29, 78, 216, 0.1);
+    border: 1px solid rgba(29, 78, 216, 0.35);
 }
 .pil-phase .name { font-size: 0.95rem; font-weight: 600; color: var(--pil-text); margin: 0.6rem 0 0.25rem; }
 .pil-phase .approach { font-size: 0.82rem; color: var(--pil-text-muted); line-height: 1.5; min-height: 2.5em; }
@@ -674,7 +672,7 @@ _CSS = """
 }
 .pil-list { margin: 0.2rem 0 0; padding-left: 1.1rem; color: var(--pil-text-muted); font-size: 0.86rem; line-height: 1.6; }
 .pil-list li { margin-bottom: 0.3rem; }
-.pil-list li::marker { color: var(--pil-cyan); }
+.pil-list li::marker { color: var(--pil-accent); }
 .pil-list b { color: var(--pil-text); font-weight: 600; }
 .pil-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .pil-tags .t {
@@ -701,7 +699,7 @@ _CSS = """
     justify-content: space-between;
     padding: 0.35rem 0 0.9rem;
     margin-bottom: 0.4rem;
-    border-bottom: 1px solid rgba(38, 52, 73, 0.6);
+    border-bottom: 1px solid rgba(218, 215, 206, 0.6);
 }
 .pil-brand {
     display: inline-flex;
@@ -719,8 +717,8 @@ _CSS = """
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: var(--pil-cyan);
-    box-shadow: 0 0 10px rgba(34, 211, 238, 0.8);
+    background: var(--pil-accent);
+    box-shadow: 0 0 10px rgba(29, 78, 216, 0.8);
 }
 .st-key-pil-steps button {
     min-height: 2.1rem;
@@ -731,18 +729,18 @@ _CSS = """
     -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
 }
-.st-key-pil-steps [data-testid="stBaseButton-secondary"] { background: rgba(17, 24, 39, 0.6); }
+.st-key-pil-steps [data-testid="stBaseButton-secondary"] { background: rgba(255, 255, 255, 0.6); }
 .st-key-pil-steps button p { font-family: var(--pil-font-mono); font-size: 0.76rem; letter-spacing: 0.04em; }
 .st-key-pil-steps [data-testid="stBaseButton-primary"],
 .st-key-pil-steps [data-testid="stBaseButton-primary"]:hover {
-    background: rgba(34, 211, 238, 0.14);
-    color: #A5F3FC;
-    border-color: rgba(34, 211, 238, 0.7);
-    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.08);
+    background: rgba(29, 78, 216, 0.14);
+    color: #1E40AF;
+    border-color: rgba(29, 78, 216, 0.7);
+    box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.08);
     transform: none;
     filter: none;
 }
-.st-key-pil-steps [data-testid="stBaseButton-primary"] p { color: #A5F3FC; }
+.st-key-pil-steps [data-testid="stBaseButton-primary"] p { color: #1E40AF; }
 
 /* ---------- Page heading (Calculations / Results) ---------- */
 .pil-page-head { margin: 0.6rem 0 0.9rem; }
@@ -754,7 +752,7 @@ _CSS = """
     color: var(--pil-text);
     margin: 0.35rem 0 0.4rem;
 }
-.pil-page-desc { font-size: 0.95rem; color: #CBD5E1; line-height: 1.6; max-width: 70ch; margin: 0; }
+.pil-page-desc { font-size: 0.95rem; color: #3B4456; line-height: 1.6; max-width: 70ch; margin: 0; }
 
 /* ---------- Overview hero ---------- */
 .pil-hero {
@@ -771,10 +769,10 @@ _CSS = """
     letter-spacing: -0.05em;
     text-transform: uppercase;
     color: transparent;
-    background: linear-gradient(135deg, #FFFFFF, #CFFAFE 50%, #C4B5FD);
+    background: linear-gradient(135deg, #14213D, #1D4ED8 55%, #EA580C);
     -webkit-background-clip: text;
     background-clip: text;
-    filter: drop-shadow(0 0 24px rgba(34, 211, 238, 0.25));
+    filter: drop-shadow(0 2px 18px rgba(29, 78, 216, 0.12));
     text-shadow: none;
 }
 .pil-hero .pil-eyebrow { font-size: 0.76rem; }
@@ -785,9 +783,9 @@ _CSS = """
     padding: 0.45rem 1.1rem;
     font-size: 0.98rem;
     line-height: 1.55;
-    color: #CBD5E1;
-    background: rgba(8, 11, 20, 0.6);
-    border: 1px solid rgba(38, 52, 73, 0.8);
+    color: #3B4456;
+    background: rgba(246, 245, 241, 0.6);
+    border: 1px solid rgba(218, 215, 206, 0.8);
     border-radius: 999px;
     -webkit-backdrop-filter: blur(6px);
     backdrop-filter: blur(6px);
@@ -798,7 +796,7 @@ _CSS = """
     text-align: center;
     font-size: 1rem;
     line-height: 1.7;
-    color: #CBD5E1;
+    color: #3B4456;
 }
 .pil-intro b { color: var(--pil-text); font-weight: 600; }
 /* Start CTA: centered, larger than regular primary buttons */
@@ -822,7 +820,7 @@ _CSS = """
     width: 18px;
     height: 2px;
     border-radius: 2px;
-    background: linear-gradient(90deg, var(--pil-cyan), var(--pil-violet));
+    background: linear-gradient(90deg, var(--pil-accent), var(--pil-accent-2));
 }
 
 /* Objectives / key features: open grids of small glass tiles */
@@ -832,10 +830,10 @@ _CSS = """
     gap: 0.75rem;
 }
 .pil-feature {
-    background: rgba(13, 18, 32, 0.62);
+    background: rgba(255, 255, 255, 0.62);
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(51, 71, 106, 0.6);
+    border: 1px solid rgba(196, 192, 180, 0.6);
     border-radius: var(--pil-radius-lg);
     padding: 1rem 1.1rem;
 }
@@ -850,13 +848,13 @@ _CSS = """
     align-items: flex-start;
     font-size: 0.9rem;
     line-height: 1.55;
-    color: #CBD5E1;
-    background: rgba(8, 11, 20, 0.5);
-    border: 1px solid rgba(38, 52, 73, 0.7);
+    color: #3B4456;
+    background: rgba(246, 245, 241, 0.5);
+    border: 1px solid rgba(218, 215, 206, 0.7);
     border-radius: var(--pil-radius);
     padding: 0.7rem 0.9rem;
 }
-.pil-objectives .n { font-family: var(--pil-font-mono); font-size: 0.78rem; color: var(--pil-cyan); padding-top: 0.12rem; }
+.pil-objectives .n { font-family: var(--pil-font-mono); font-size: 0.78rem; color: var(--pil-accent); padding-top: 0.12rem; }
 .pil-objectives b { color: var(--pil-text); font-weight: 600; }
 
 /* ---------- Results: run summary strip ---------- */
@@ -868,8 +866,8 @@ _CSS = """
     font-size: 0.85rem;
     color: var(--pil-text-muted);
     padding: 0.7rem 1rem;
-    background: rgba(8, 11, 20, 0.55);
-    border: 1px solid rgba(38, 52, 73, 0.8);
+    background: rgba(246, 245, 241, 0.55);
+    border: 1px solid rgba(218, 215, 206, 0.8);
     border-radius: var(--pil-radius);
     -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
@@ -920,14 +918,14 @@ def _glyph_svg():
     return (
         '<svg viewBox="0 0 40 40" width="30" height="30" aria-hidden="true">'
         f'<defs><linearGradient id="{gid}" x1="0" y1="0" x2="1" y2="1">'
-        '<stop offset="0" stop-color="#22D3EE"/><stop offset="1" stop-color="#8B5CF6"/>'
+        '<stop offset="0" stop-color="#1D4ED8"/><stop offset="1" stop-color="#EA580C"/>'
         "</linearGradient></defs>"
         f'<path d="M5 27 L14 13 L24 27 L34 13" fill="none" stroke="url(#{gid})" '
         'stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>'
-        '<circle cx="5" cy="27" r="2.6" fill="#22D3EE"/>'
-        '<circle cx="14" cy="13" r="2.6" fill="#5EB8F3"/>'
-        '<circle cx="24" cy="27" r="2.6" fill="#7C8CF4"/>'
-        '<circle cx="34" cy="13" r="2.6" fill="#8B5CF6"/>'
+        '<circle cx="5" cy="27" r="2.6" fill="#1D4ED8"/>'
+        '<circle cx="14" cy="13" r="2.6" fill="#615194"/>'
+        '<circle cx="24" cy="27" r="2.6" fill="#A65550"/>'
+        '<circle cx="34" cy="13" r="2.6" fill="#EA580C"/>'
         "</svg>"
     )
 
@@ -1126,7 +1124,7 @@ def style_release_axes(fig, ax, title, legend=False):
 _QUANTUM_SWARM_HTML = """<!doctype html>
 <html><head><meta charset="utf-8">
 <style>
-html, body { margin: 0; height: 100%; overflow: hidden; background: #080B14; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: #F6F5F1; }
 canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
 </style></head>
 <body>
@@ -1134,7 +1132,7 @@ canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
 <script>
 (() => {
   const P = __PARAMS__;
-  const CYAN = [34, 211, 238], VIOLET = [139, 92, 246], BG = "#080B14";
+  const BLUE = [29, 78, 216], ORANGE = [234, 88, 12], BG = "#F6F5F1";
   const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(", ");
 
   const canvas = document.getElementById("canvas");
@@ -1163,7 +1161,7 @@ canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
         x: cx + Math.cos(angle) * dst, y: cy + Math.sin(angle) * dst, vx: 0, vy: 0,
         baseX: 0, baseY: 0, angle: angle, distance: dst,
         size: Math.random() * 1.5 + 0.5, excitation: 0,
-        color: mix(CYAN, VIOLET, t),   // cyan core -> violet rim
+        color: mix(BLUE, ORANGE, t),   // blue core -> orange rim
       });
     }
   }
@@ -1187,20 +1185,20 @@ canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
     needsFrame = false;
     if (animate) time += 0.002;  // global rotation speed
     const { width, height, cx, cy } = dim;
-    const cyan = CYAN.join(", "), violet = VIOLET.join(", ");
+    const blue = BLUE.join(", "), orange = ORANGE.join(", ");
 
-    // 1. Background: deep navy with soft cyan / violet nebulae
+    // 1. Background: warm paper with soft blue / orange washes
     ctx.fillStyle = BG;
     ctx.fillRect(0, 0, width, height);
-    const glowCyan = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(width, height) * 0.45);
-    glowCyan.addColorStop(0, `rgba(${cyan}, 0.10)`);
-    glowCyan.addColorStop(1, `rgba(${cyan}, 0)`);
-    ctx.fillStyle = glowCyan;
+    const glowBlue = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(width, height) * 0.45);
+    glowBlue.addColorStop(0, `rgba(${blue}, 0.10)`);
+    glowBlue.addColorStop(1, `rgba(${blue}, 0)`);
+    ctx.fillStyle = glowBlue;
     ctx.fillRect(0, 0, width, height);
-    const glowViolet = ctx.createRadialGradient(width, height, 0, width, height, width * 0.6);
-    glowViolet.addColorStop(0, `rgba(${violet}, 0.14)`);
-    glowViolet.addColorStop(1, `rgba(${violet}, 0)`);
-    ctx.fillStyle = glowViolet;
+    const glowOrange = ctx.createRadialGradient(width, height, 0, width, height, width * 0.6);
+    glowOrange.addColorStop(0, `rgba(${orange}, 0.14)`);
+    glowOrange.addColorStop(1, `rgba(${orange}, 0)`);
+    ctx.fillStyle = glowOrange;
     ctx.fillRect(0, 0, width, height);
 
     // 2. Shockwaves expand and fade
@@ -1261,7 +1259,7 @@ canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
           const opacity = 1 - Math.sqrt(distSq) / 60;
           const excitation = Math.max(p1.excitation, p2.excitation);
           const alpha = Math.min(1, opacity * 0.2 + excitation * 0.5);
-          ctx.strokeStyle = `rgba(${cyan}, ${alpha})`;
+          ctx.strokeStyle = `rgba(${blue}, ${alpha})`;
           ctx.beginPath();
           ctx.moveTo(p1.x, p1.y);
           ctx.lineTo(p2.x, p2.y);
@@ -2000,8 +1998,8 @@ elif page == "results":
                 with card("release-info"):
                     card_header("How to read this")
                     if run["deeponet"] is not None and run["pinn"] is not None:
-                        how = ("The solid cyan curve is the DeepONet's instant prediction; the dashed "
-                               "violet curve is the PINN trained from scratch for this same D. The two "
+                        how = ("The solid blue curve is the DeepONet's instant prediction; the dashed "
+                               "orange curve is the PINN trained from scratch for this same D. The two "
                                "should look similar, illustrating the speed/accuracy tradeoff.")
                     else:
                         how = ("The curve shows how much drug concentration remains at the center of the "
