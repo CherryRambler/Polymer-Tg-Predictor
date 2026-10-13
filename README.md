@@ -18,8 +18,8 @@ run, and the app is deployed on Streamlit Community Cloud.**
 
 The Streamlit app (`app.py`) puts the trained models behind one interface,
 as a three-step flow over a full-page interactive particle background (the
-"Quantum Swarm": it reacts to the mouse, clicks send shockwaves, and a
-**Motion** toggle in the top bar pauses it):
+"Quantum Swarm": it is always in motion, reacts to the mouse, and clicks
+send shockwaves):
 
 | Page | What it does |
 |---|---|

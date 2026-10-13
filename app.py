@@ -1120,8 +1120,8 @@ def style_release_axes(fig, ax, title, legend=False):
 # typing or scrolling. Pointer input is read from the parent page instead
 # (Streamlit component iframes are same-origin), which keeps the repulsion and
 # click shockwaves working across the whole page. Physics: a golden-angle
-# spiral of particles on springs. Pauses when the tab is hidden or animation
-# is switched off; reduced-motion users get a still frame.
+# spiral of particles on springs. Always animated (by design, it ignores the
+# OS reduced-motion setting); it only idles while the browser tab is hidden.
 # ---------------------------------------------------------------------------
 _QUANTUM_SWARM_HTML = """<!doctype html>
 <html><head><meta charset="utf-8">
@@ -1140,8 +1140,6 @@ canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
   const canvas = document.getElementById("canvas");
   const ctx = canvas.getContext("2d", { alpha: false });
 
-  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const running = P.animate && !reducedMotion;
   let needsFrame = true;   // paint one still frame even when paused (first paint, resize)
   let time = 0;
   let particles = [];
@@ -1184,7 +1182,7 @@ canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
   resize();
 
   function loop() {
-    const animate = running && !document.hidden;
+    const animate = !document.hidden;  // always moving; only idles in a hidden browser tab
     if (!animate && !needsFrame) { requestAnimationFrame(loop); return; }
     needsFrame = false;
     if (animate) time += 0.002;  // global rotation speed
@@ -1297,7 +1295,7 @@ canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
   // so the page's client coordinates are canvas coordinates.
   let host = null;
   try { host = window.parent.document; } catch (err) { host = null; }  // cross-origin: no interaction
-  if (host && running) {
+  if (host) {
     host.addEventListener("pointermove", (e) => { pointer.x = e.clientX; pointer.y = e.clientY; }, { passive: true });
     host.addEventListener("pointerdown", (e) => {
       pointer.isDown = true;
@@ -1319,11 +1317,11 @@ canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
 """
 
 
-def quantum_background(animate=True, min_particles=220, max_particles=950):
+def quantum_background(min_particles=220, max_particles=950):
     """Render the full-viewport Quantum Swarm background. Call it once, at the
     same point on every run (before any page content), so Streamlit keeps the
     same iframe -- and a running animation -- when the user switches pages."""
-    params = json.dumps({"animate": animate, "minParticles": min_particles, "maxParticles": max_particles})
+    params = json.dumps({"minParticles": min_particles, "maxParticles": max_particles})
     markup = _QUANTUM_SWARM_HTML.replace("__PARAMS__", params)
     with st.container(key="pil-bg"):
         if hasattr(st, "iframe"):
@@ -1488,13 +1486,12 @@ deeponet_ready = DEEPONET_AVAILABLE and os.path.exists("models/deeponet_diffusio
 st.session_state.setdefault("D_slider", 0.3)
 st.session_state.setdefault("train_pinn", not deeponet_ready)
 st.session_state.setdefault("batch_text", "CC(c1ccccc1)C\nCC\nCC(C)(C(=O)OC)C")
-st.session_state.setdefault("animate_bg", True)
 
 # Streamlit drops a widget's session-state value on any run where that widget
 # isn't rendered. The calculation inputs only render on the Calculations page,
 # so re-assign them every run to keep them while the user is on other pages.
 for _key in ("smiles_value", "polymer_choice", "use_structure_D", "D_slider",
-             "train_pinn", "batch_text", "animate_bg"):
+             "train_pinn", "batch_text"):
     if _key in st.session_state:
         st.session_state[_key] = st.session_state[_key]
 
@@ -1520,7 +1517,7 @@ def _use_example_chip(name, smiles):
 # ---------------------------------------------------------------------------
 # Rendered first, at the same spot every run, so the same background iframe
 # (and its running animation) survives page switches.
-quantum_background(animate=st.session_state.animate_bg)
+quantum_background()
 
 with st.container(horizontal=True, key="pil-nav", gap="small"):
     _md('<span class="pil-brand pil-on-bg"><span class="dot"></span>Polymer Intelligence Lab</span>')
@@ -1533,7 +1530,6 @@ with st.container(horizontal=True, key="pil-nav", gap="small"):
                 args=(_page,),
                 type="primary" if st.session_state.page == _page else "secondary",
             )
-        st.toggle("Motion", key="animate_bg", help="Animate the particle background.")
 
 page = st.session_state.page
 
