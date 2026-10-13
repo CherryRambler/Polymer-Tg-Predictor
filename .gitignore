@@ -1,10 +1,29 @@
 # Python
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
 .ipynb_checkpoints/
 venv/
 .venv/
+env/
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Test / lint / type-check caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Secrets and local environment -- never commit
+.env
+.env.*
+.streamlit/secrets.toml
+# (.streamlit/config.toml IS committed: it holds the app theme)
 
 # Trained model binaries (regenerable, so ignored by default)
 models/*.joblib
@@ -16,7 +35,35 @@ models/*.pth
 !models/gnn_tg.pt
 !models/deeponet_diffusion.pt
 
+# Generated data
 data/processed/graph/*.pt
-.DS_Store
 data/processed/*.csv
+
+# Old React/Vite hero -- no longer used: app.py now embeds the Quantum Swarm
+# directly. Kept on disk locally but not pushed. Remove this line to version it.
+frontend/
+
+# Node tooling (in case a JS frontend is added back)
+node_modules/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Logs
+*.log
+
+# Editors / IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+.hintrc
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Claude Code local settings
 .claude/
