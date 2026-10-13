@@ -14,7 +14,6 @@ Run locally:
 # pyrefly: ignore [missing-import]
 import streamlit as st
 # pyrefly: ignore [missing-import]
-import streamlit.components.v1 as components
 import json
 import numpy as np
 import pandas as pd
@@ -97,58 +96,44 @@ CUSTOM_LABEL = "Custom / paste your own SMILES"
 # (which never actually wraps the widgets in between).
 # ---------------------------------------------------------------------------
 TOKENS = {
-    # Surfaces
-    "bg": "#080B14",
-    "bg-2": "#0D1220",
-    "surface": "#111827",
-    "surface-2": "#151D2E",
-    "border": "#263449",
-    "border-strong": "#33476A",
+    # Surfaces (graphite)
+    "bg": "#0C0E0F",
+    "bg-2": "#111415",
+    "surface": "#161A1B",
+    "surface-2": "#1C2123",
+    "border": "#2A3134",
+    "border-strong": "#3A4447",
     # Accents
-    "cyan": "#22D3EE",
-    "violet": "#8B5CF6",
-    "violet-soft": "#A78BFA",
-    "amber": "#FBBF24",
+    "accent": "#2DD4A4",
+    "accent-2": "#F59E0B",
+    "accent-2-soft": "#FBBF24",
     # Text
-    "text": "#F1F5F9",
-    "text-muted": "#94A3B8",
-    "text-faint": "#64748B",
+    "text": "#E8ECEA",
+    "text-muted": "#9AA5A1",
+    "text-faint": "#66706C",
     # Status
-    "success": "#34D399",
-    "error": "#FB7185",
+    "success": "#4ADE80",
+    "error": "#F87171",
     # Shape
-    "radius-sm": "8px",
-    "radius": "12px",
-    "radius-lg": "16px",
+    "radius-sm": "6px",
+    "radius": "10px",
+    "radius-lg": "12px",
     # Type
-    "font-sans": "'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif",
-    "font-mono": "'Geist Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace",
+    "font-sans": "'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif",
+    "font-mono": "'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace",
 }
 
 # Chart series colors -- shared by every matplotlib figure in the app.
-CURVE_PRIMARY = TOKENS["cyan"]
-CURVE_SECONDARY = TOKENS["violet-soft"]
+CURVE_PRIMARY = TOKENS["accent"]
+CURVE_SECONDARY = TOKENS["accent-2-soft"]
 
 _CSS = """
 /* ---------- Page canvas ---------- */
 .stApp {
     background:
-        radial-gradient(1100px 520px at 8% -8%, rgba(34, 211, 238, 0.08), transparent 62%),
-        radial-gradient(900px 480px at 100% 0%, rgba(139, 92, 246, 0.09), transparent 60%),
+        radial-gradient(1000px 420px at 50% -12%, rgba(45, 212, 164, 0.06), transparent 65%),
         var(--pil-bg);
-    isolation: isolate;
-}
-/* Faint lattice behind the top of the page, fading out as you scroll down */
-.stApp::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    background-image: radial-gradient(rgba(148, 163, 184, 0.09) 1px, transparent 1px);
-    background-size: 28px 28px;
-    -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 50%);
-    mask-image: linear-gradient(to bottom, #000 0%, transparent 50%);
+    font-family: var(--pil-font-sans);
 }
 [data-testid="stAppViewContainer"], [data-testid="stMain"], [data-testid="stHeader"] {
     background: transparent;
@@ -167,7 +152,7 @@ _CSS = """
     font-weight: 500;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--pil-cyan);
+    color: var(--pil-accent);
 }
 .pil-label {
     font-size: 0.7rem;
@@ -176,6 +161,40 @@ _CSS = """
     text-transform: uppercase;
     color: var(--pil-text-muted);
     margin: 0.2rem 0 0.1rem 1px;
+}
+
+/* ---------- Hero ---------- */
+.pil-hero {
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+    padding: 2.4rem 1.5rem 2rem;
+    margin-bottom: 0.6rem;
+    border: 1px solid var(--pil-border);
+    border-radius: var(--pil-radius-lg);
+    background:
+        linear-gradient(90deg, transparent, rgba(45, 212, 164, 0.8), rgba(245, 158, 11, 0.8), transparent) top / 100% 1px no-repeat,
+        repeating-linear-gradient(0deg, rgba(154, 165, 161, 0.05) 0 1px, transparent 1px 32px),
+        repeating-linear-gradient(90deg, rgba(154, 165, 161, 0.05) 0 1px, transparent 1px 32px),
+        var(--pil-bg-2);
+}
+.pil-hero-art { display: flex; justify-content: center; margin-bottom: 0.6rem; }
+.pil-hero-art svg { width: 56px; height: 56px; }
+.pil-hero-title {
+    font-family: var(--pil-font-sans);
+    font-size: 2.6rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    color: var(--pil-text);
+    margin: 0.4rem 0 0.6rem;
+    padding: 0;
+}
+.pil-hero-sub {
+    font-size: 0.98rem;
+    color: var(--pil-text-muted);
+    max-width: 44ch;
+    margin: 0 auto;
 }
 
 /* ---------- Model status strip (under the hero) ---------- */
@@ -194,7 +213,7 @@ _CSS = """
     font-size: 0.7rem;
     letter-spacing: 0.04em;
     color: var(--pil-text-muted);
-    background: rgba(17, 24, 39, 0.7);
+    background: rgba(22, 26, 27, 0.7);
     border: 1px solid var(--pil-border);
     border-radius: 999px;
     padding: 0.28rem 0.7rem 0.28rem 0.55rem;
@@ -205,14 +224,14 @@ _CSS = """
     height: 7px;
     border-radius: 50%;
     background: var(--pil-success);
-    box-shadow: 0 0 8px rgba(52, 211, 153, 0.6);
+    box-shadow: 0 0 8px rgba(74, 222, 128, 0.6);
 }
 .pil-status-item.ok .dot::after {
     content: "";
     position: absolute;
     inset: -3px;
     border-radius: 50%;
-    border: 1px solid rgba(52, 211, 153, 0.55);
+    border: 1px solid rgba(74, 222, 128, 0.55);
     animation: pil-pulse 2.6s ease-out infinite;
 }
 .pil-status-item.off { color: var(--pil-text-faint); }
@@ -241,7 +260,7 @@ _CSS = """
     border-radius: var(--pil-radius);
     border: 1px solid var(--pil-border);
     background:
-        radial-gradient(circle at 30% 20%, rgba(34, 211, 238, 0.16), transparent 70%),
+        radial-gradient(circle at 30% 20%, rgba(45, 212, 164, 0.16), transparent 70%),
         var(--pil-surface);
 }
 .pil-section-title {
@@ -262,7 +281,7 @@ _CSS = """
 
 /* ---------- Cards (native bordered containers) ---------- */
 [class*="st-key-pil-card-"], [class*="st-key-pil-accent-"] {
-    background: linear-gradient(180deg, rgba(21, 29, 46, 0.92), rgba(17, 24, 39, 0.92));
+    background: linear-gradient(180deg, rgba(28, 33, 35, 0.92), rgba(22, 26, 27, 0.92));
     border-color: var(--pil-border) !important;
     border-radius: var(--pil-radius-lg) !important;
     padding: 1.2rem 1.3rem !important;
@@ -270,12 +289,12 @@ _CSS = """
     transition: border-color 0.2s ease;
 }
 [class*="st-key-pil-card-"]:hover { border-color: var(--pil-border-strong) !important; }
-/* Emphasized card: thin luminous cyan->violet edge along the top */
+/* Emphasized card: thin emerald->amber edge along the top */
 [class*="st-key-pil-accent-"] {
     background:
-        linear-gradient(90deg, rgba(34, 211, 238, 0.7), rgba(139, 92, 246, 0.7)) top / 100% 1px no-repeat,
-        radial-gradient(600px 160px at 0% 0%, rgba(34, 211, 238, 0.06), transparent 70%),
-        linear-gradient(180deg, rgba(21, 29, 46, 0.95), rgba(17, 24, 39, 0.95));
+        linear-gradient(90deg, rgba(45, 212, 164, 0.7), rgba(245, 158, 11, 0.7)) top / 100% 1px no-repeat,
+        radial-gradient(600px 160px at 0% 0%, rgba(45, 212, 164, 0.06), transparent 70%),
+        linear-gradient(180deg, rgba(28, 33, 35, 0.95), rgba(22, 26, 27, 0.95));
     border-color: var(--pil-border-strong) !important;
 }
 .pil-card-head {
@@ -290,8 +309,8 @@ _CSS = """
     height: 8px;
     margin-top: 0.42rem;
     border-radius: 50%;
-    background: var(--pil-cyan);
-    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15), 0 0 10px rgba(34, 211, 238, 0.5);
+    background: var(--pil-accent);
+    box-shadow: 0 0 0 3px rgba(45, 212, 164, 0.15), 0 0 10px rgba(45, 212, 164, 0.5);
 }
 .pil-card-title {
     font-size: 0.98rem;
@@ -308,19 +327,19 @@ _CSS = """
 
 /* ---------- Buttons ---------- */
 [data-testid="stBaseButton-primary"] {
-    background: linear-gradient(135deg, #22D3EE 0%, #38BDF8 100%);
-    color: #04121A;
-    border: 1px solid rgba(34, 211, 238, 0.9);
+    background: linear-gradient(135deg, #2DD4A4 0%, #5EEAC0 100%);
+    color: #04140E;
+    border: 1px solid rgba(45, 212, 164, 0.9);
     font-weight: 600;
     min-height: 2.6rem;
-    box-shadow: 0 6px 20px -8px rgba(34, 211, 238, 0.55);
+    box-shadow: 0 6px 20px -8px rgba(45, 212, 164, 0.55);
     transition: box-shadow 0.18s ease, transform 0.18s ease, filter 0.18s ease;
 }
 [data-testid="stBaseButton-primary"]:hover {
-    color: #04121A;
-    border-color: #67E8F9;
+    color: #04140E;
+    border-color: #5EEAC0;
     filter: brightness(1.06);
-    box-shadow: 0 8px 26px -8px rgba(34, 211, 238, 0.75);
+    box-shadow: 0 8px 26px -8px rgba(45, 212, 164, 0.75);
     transform: translateY(-1px);
 }
 [data-testid="stBaseButton-primary"]:active { transform: translateY(0); }
@@ -340,12 +359,12 @@ _CSS = """
     transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
 }
 [data-testid="stBaseButton-secondary"]:hover {
-    border-color: rgba(34, 211, 238, 0.6);
-    color: #A5F3FC;
-    background: #17213A;
+    border-color: rgba(45, 212, 164, 0.6);
+    color: #99F6D4;
+    background: #20282A;
 }
 .stButton button:focus-visible, .stDownloadButton button:focus-visible {
-    outline: 2px solid var(--pil-cyan);
+    outline: 2px solid var(--pil-accent);
     outline-offset: 2px;
 }
 
@@ -360,10 +379,10 @@ _CSS = """
 .st-key-pil-chips button p { font-size: 0.8rem; }
 .st-key-pil-chips [data-testid="stBaseButton-primary"],
 .st-key-pil-chips [data-testid="stBaseButton-primary"]:hover {
-    background: rgba(34, 211, 238, 0.12);
-    color: #A5F3FC;
-    border-color: rgba(34, 211, 238, 0.65);
-    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.08);
+    background: rgba(45, 212, 164, 0.12);
+    color: #99F6D4;
+    border-color: rgba(45, 212, 164, 0.65);
+    box-shadow: 0 0 0 3px rgba(45, 212, 164, 0.08);
     transform: none;
     filter: none;
 }
@@ -375,7 +394,7 @@ _CSS = """
 }
 .stTextInput [data-baseweb="input"]:focus-within,
 .stTextArea [data-baseweb="textarea"]:focus-within {
-    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.16);
+    box-shadow: 0 0 0 3px rgba(45, 212, 164, 0.16);
 }
 /* SMILES are chemistry, not prose: monospace wherever they are typed */
 .st-key-smiles_value input, .st-key-pil-card-batch-input textarea {
@@ -386,7 +405,7 @@ _CSS = """
 /* ---------- Tabs: segmented navigation (ARIA roles: stable across versions) ---------- */
 .stTabs [role="tablist"] {
     gap: 0.25rem;
-    background: rgba(13, 18, 32, 0.85);
+    background: rgba(17, 20, 21, 0.85);
     border: 1px solid var(--pil-border);
     padding: 0.3rem;
     border-radius: var(--pil-radius);
@@ -403,19 +422,19 @@ _CSS = """
     transition: background 0.18s ease, color 0.18s ease;
 }
 .stTabs [role="tab"] p { font-size: 0.86rem; font-weight: 550; white-space: nowrap; }
-.stTabs [role="tab"]:hover { color: var(--pil-text); background: rgba(21, 29, 46, 0.8); }
+.stTabs [role="tab"]:hover { color: var(--pil-text); background: rgba(28, 33, 35, 0.8); }
 .stTabs [role="tab"][aria-selected="true"] {
     background: var(--pil-surface-2);
-    color: #A5F3FC;
-    box-shadow: inset 0 0 0 1px var(--pil-border-strong), inset 0 -2px 0 var(--pil-cyan);
+    color: #99F6D4;
+    box-shadow: inset 0 0 0 1px var(--pil-border-strong), inset 0 -2px 0 var(--pil-accent);
 }
-.stTabs [role="tab"][aria-selected="true"] p { color: #A5F3FC; }
-.stTabs [role="tab"]:focus-visible { outline: 2px solid var(--pil-cyan); outline-offset: 1px; }
+.stTabs [role="tab"][aria-selected="true"] p { color: #99F6D4; }
+.stTabs [role="tab"]:focus-visible { outline: 2px solid var(--pil-accent); outline-offset: 1px; }
 .stTabs [role="tabpanel"] { padding-top: 1rem; }
 
 /* ---------- Metrics, expanders, images ---------- */
 [data-testid="stMetric"] {
-    background: rgba(8, 11, 20, 0.55);
+    background: rgba(12, 14, 15, 0.55);
     border: 1px solid var(--pil-border);
     border-radius: var(--pil-radius);
     padding: 0.7rem 0.9rem;
@@ -435,7 +454,7 @@ _CSS = """
 [data-testid="stExpander"] details {
     border-color: var(--pil-border);
     border-radius: var(--pil-radius);
-    background: rgba(17, 24, 39, 0.6);
+    background: rgba(22, 26, 27, 0.6);
 }
 .st-key-pil-architecture [data-testid="stImage"] img { border-radius: 10px; }
 /* RDKit draws black-on-white PNGs. Display-only dark rendering: invert +
@@ -445,7 +464,7 @@ _CSS = """
     border: 1px solid var(--pil-border);
     border-radius: var(--pil-radius);
     background:
-        radial-gradient(circle at 50% 40%, rgba(34, 211, 238, 0.07), transparent 70%),
+        radial-gradient(circle at 50% 40%, rgba(45, 212, 164, 0.07), transparent 70%),
         var(--pil-bg-2);
     padding: 0.4rem;
 }
@@ -467,20 +486,20 @@ _CSS = """
     padding: 0.28rem 0.75rem;
     border: 1px solid transparent;
 }
-.pil-badge.ok { color: var(--pil-success); background: rgba(52, 211, 153, 0.09); border-color: rgba(52, 211, 153, 0.28); }
-.pil-badge.err { color: var(--pil-error); background: rgba(251, 113, 133, 0.09); border-color: rgba(251, 113, 133, 0.3); }
+.pil-badge.ok { color: var(--pil-success); background: rgba(74, 222, 128, 0.09); border-color: rgba(74, 222, 128, 0.28); }
+.pil-badge.err { color: var(--pil-error); background: rgba(248, 113, 113, 0.09); border-color: rgba(248, 113, 113, 0.3); }
 .pil-hint { font-size: 0.82rem; color: var(--pil-text-muted); margin: 0.1rem 0 0; }
 
 /* ---------- Primary result ---------- */
 .pil-result {
     position: relative;
     border-radius: var(--pil-radius-lg);
-    border: 1px solid rgba(34, 211, 238, 0.35);
+    border: 1px solid rgba(45, 212, 164, 0.35);
     background:
-        radial-gradient(420px 200px at 15% 0%, rgba(34, 211, 238, 0.14), transparent 70%),
-        radial-gradient(380px 200px at 100% 100%, rgba(139, 92, 246, 0.14), transparent 70%),
+        radial-gradient(420px 200px at 15% 0%, rgba(45, 212, 164, 0.14), transparent 70%),
+        radial-gradient(380px 200px at 100% 100%, rgba(245, 158, 11, 0.14), transparent 70%),
         var(--pil-bg-2);
-    box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.05), 0 18px 40px -20px rgba(34, 211, 238, 0.35);
+    box-shadow: 0 0 0 1px rgba(45, 212, 164, 0.05), 0 18px 40px -20px rgba(45, 212, 164, 0.35);
     padding: 1.2rem 1.35rem 1.1rem;
     animation: pil-rise 0.35s ease;
 }
@@ -494,7 +513,7 @@ _CSS = """
     color: var(--pil-text);
     font-variant-numeric: tabular-nums;
 }
-.pil-result-value .unit { font-size: 1.35rem; color: var(--pil-cyan); margin-left: 0.3rem; letter-spacing: 0; }
+.pil-result-value .unit { font-size: 1.35rem; color: var(--pil-accent); margin-left: 0.3rem; letter-spacing: 0; }
 .pil-result-sub { font-size: 0.83rem; color: var(--pil-text-muted); margin-top: 0.4rem; }
 @keyframes pil-rise {
     from { opacity: 0; transform: translateY(4px); }
@@ -516,7 +535,7 @@ _CSS = """
     position: relative;
     height: 6px;
     border-radius: 999px;
-    background: linear-gradient(90deg, #22D3EE 0%, #8B5CF6 55%, #FBBF24 100%);
+    background: linear-gradient(90deg, #2DD4A4 0%, #F59E0B 55%, #F87171 100%);
     opacity: 0.9;
 }
 .pil-scale-marker {
@@ -527,7 +546,7 @@ _CSS = """
     border-radius: 50%;
     background: var(--pil-text);
     border: 3px solid var(--pil-bg);
-    box-shadow: 0 0 0 1px rgba(241, 245, 249, 0.5), 0 0 12px rgba(241, 245, 249, 0.45);
+    box-shadow: 0 0 0 1px rgba(232, 236, 234, 0.5), 0 0 12px rgba(232, 236, 234, 0.45);
     transform: translate(-50%, -50%);
 }
 
@@ -536,9 +555,9 @@ _CSS = """
     font-size: 0.86rem;
     color: var(--pil-text-muted);
     line-height: 1.6;
-    background: linear-gradient(90deg, rgba(34, 211, 238, 0.07), rgba(139, 92, 246, 0.03));
+    background: linear-gradient(90deg, rgba(45, 212, 164, 0.07), rgba(245, 158, 11, 0.03));
     border: 1px solid var(--pil-border);
-    border-left: 2px solid var(--pil-cyan);
+    border-left: 2px solid var(--pil-accent);
     padding: 0.7rem 0.95rem;
     border-radius: 10px;
 }
@@ -556,9 +575,9 @@ _CSS = """
     display: inline-block;
     font-size: 0.72rem;
     font-weight: 550;
-    color: #C4B5FD;
-    background: rgba(139, 92, 246, 0.12);
-    border: 1px solid rgba(139, 92, 246, 0.3);
+    color: #FDE68A;
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid rgba(245, 158, 11, 0.3);
     border-radius: 999px;
     padding: 0.12rem 0.6rem;
 }
@@ -573,7 +592,7 @@ _CSS = """
     padding: 1.5rem;
     border: 1px dashed var(--pil-border-strong);
     border-radius: var(--pil-radius);
-    background: rgba(8, 11, 20, 0.4);
+    background: rgba(12, 14, 15, 0.4);
     color: var(--pil-text-muted);
     font-size: 0.86rem;
     line-height: 1.55;
@@ -598,11 +617,11 @@ _CSS = """
     border-radius: 999px;
     padding: 0.3rem 0.75rem;
 }
-.pil-pipeline .step:last-child { border-color: rgba(34, 211, 238, 0.5); color: #A5F3FC; }
+.pil-pipeline .step:last-child { border-color: rgba(45, 212, 164, 0.5); color: #99F6D4; }
 .pil-pipeline .link {
     width: 22px;
     height: 1px;
-    background: linear-gradient(90deg, rgba(34, 211, 238, 0.7), rgba(139, 92, 246, 0.7));
+    background: linear-gradient(90deg, rgba(45, 212, 164, 0.7), rgba(245, 158, 11, 0.7));
 }
 .pil-grid {
     display: grid;
@@ -610,7 +629,7 @@ _CSS = """
     gap: 0.55rem;
 }
 .pil-grid .item {
-    background: rgba(8, 11, 20, 0.5);
+    background: rgba(12, 14, 15, 0.5);
     border: 1px solid var(--pil-border);
     border-radius: 10px;
     padding: 0.55rem 0.75rem;
@@ -632,13 +651,13 @@ _CSS = """
     gap: 0.75rem;
 }
 .pil-phase {
-    background: linear-gradient(180deg, rgba(21, 29, 46, 0.92), rgba(17, 24, 39, 0.92));
+    background: linear-gradient(180deg, rgba(28, 33, 35, 0.92), rgba(22, 26, 27, 0.92));
     border: 1px solid var(--pil-border);
     border-radius: var(--pil-radius-lg);
     padding: 1rem 1.1rem;
     transition: border-color 0.2s ease, transform 0.2s ease;
 }
-.pil-phase:hover { border-color: rgba(34, 211, 238, 0.45); transform: translateY(-1px); }
+.pil-phase:hover { border-color: rgba(45, 212, 164, 0.45); transform: translateY(-1px); }
 .pil-phase .num {
     display: inline-grid;
     place-items: center;
@@ -647,9 +666,9 @@ _CSS = """
     border-radius: 8px;
     font-family: var(--pil-font-mono);
     font-size: 0.78rem;
-    color: #A5F3FC;
-    background: rgba(34, 211, 238, 0.1);
-    border: 1px solid rgba(34, 211, 238, 0.35);
+    color: #99F6D4;
+    background: rgba(45, 212, 164, 0.1);
+    border: 1px solid rgba(45, 212, 164, 0.35);
 }
 .pil-phase .name { font-size: 0.95rem; font-weight: 600; color: var(--pil-text); margin: 0.6rem 0 0.25rem; }
 .pil-phase .approach { font-size: 0.82rem; color: var(--pil-text-muted); line-height: 1.5; min-height: 2.5em; }
@@ -663,7 +682,7 @@ _CSS = """
 }
 .pil-list { margin: 0.2rem 0 0; padding-left: 1.1rem; color: var(--pil-text-muted); font-size: 0.86rem; line-height: 1.6; }
 .pil-list li { margin-bottom: 0.3rem; }
-.pil-list li::marker { color: var(--pil-cyan); }
+.pil-list li::marker { color: var(--pil-accent); }
 .pil-list b { color: var(--pil-text); font-weight: 600; }
 .pil-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .pil-tags .t {
@@ -701,6 +720,8 @@ _CSS = """
     .pil-section-glyph { display: none; }
     .pil-section-title { font-size: 1.15rem; }
     .pil-result-value { font-size: 2.4rem; }
+    .pil-hero-title { font-size: 1.8rem; }
+    .pil-hero { padding: 1.6rem 1rem 1.4rem; }
     [class*="st-key-pil-card-"], [class*="st-key-pil-accent-"] { padding: 1rem !important; }
     .stTabs [role="tab"] { padding: 0.45rem 0.7rem; }
 }
@@ -723,14 +744,14 @@ def _glyph_svg():
     return (
         '<svg viewBox="0 0 40 40" width="30" height="30" aria-hidden="true">'
         f'<defs><linearGradient id="{gid}" x1="0" y1="0" x2="1" y2="1">'
-        '<stop offset="0" stop-color="#22D3EE"/><stop offset="1" stop-color="#8B5CF6"/>'
+        '<stop offset="0" stop-color="#2DD4A4"/><stop offset="1" stop-color="#F59E0B"/>'
         "</linearGradient></defs>"
         f'<path d="M5 27 L14 13 L24 27 L34 13" fill="none" stroke="url(#{gid})" '
         'stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>'
-        '<circle cx="5" cy="27" r="2.6" fill="#22D3EE"/>'
-        '<circle cx="14" cy="13" r="2.6" fill="#5EB8F3"/>'
-        '<circle cx="24" cy="27" r="2.6" fill="#7C8CF4"/>'
-        '<circle cx="34" cy="13" r="2.6" fill="#8B5CF6"/>'
+        '<circle cx="5" cy="27" r="2.6" fill="#2DD4A4"/>'
+        '<circle cx="14" cy="13" r="2.6" fill="#7FC98A"/>'
+        '<circle cx="24" cy="27" r="2.6" fill="#C8B04C"/>'
+        '<circle cx="34" cy="13" r="2.6" fill="#F59E0B"/>'
         "</svg>"
     )
 
@@ -916,290 +937,18 @@ def style_release_axes(fig, ax, title, legend=False):
 
 
 # ---------------------------------------------------------------------------
-# Quantum Swarm hero -- the interactive particle "galaxy" at the top of the
-# page. Plain HTML/CSS/JS rendered in an iframe via components.html, so the
-# app needs no separate frontend build. Physics: a golden-angle spiral of
-# particles on springs, repelled by the pointer; clicks and PULSE send
-# shockwaves. Pauses when scrolled out of view; reduced-motion users get a
-# still frame (RUN starts it).
+# Hero -- static banner at the top of the page: eyebrow, title, subtitle and
+# a polymer-chain motif. Plain markup styled by _CSS (no iframe, no JS).
 # ---------------------------------------------------------------------------
-_QUANTUM_SWARM_HTML = """<!doctype html>
-<html><head><meta charset="utf-8">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400..700&family=Geist+Mono:wght@400..900&display=swap" rel="stylesheet">
-<style>
-html, body { margin: 0; height: 100%; overflow: hidden; background: transparent;
-             font-family: 'Geist', system-ui, sans-serif; }
-.qs { position: relative; height: 100%; box-sizing: border-box; overflow: hidden;
-      border-radius: 16px; border: 1px solid #33476A; background: #080B14;
-      user-select: none; -webkit-user-select: none; }
-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: crosshair; }
-.edge { position: absolute; top: 0; left: 0; right: 0; height: 1px; z-index: 1; pointer-events: none;
-        background: linear-gradient(90deg, rgba(34,211,238,0), rgba(34,211,238,.7), rgba(139,92,246,.7)); }
-.overlay { position: relative; z-index: 2; height: 100%; box-sizing: border-box; padding: 20px;
-           display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; }
-header { display: flex; align-items: center; justify-content: space-between; pointer-events: auto;
-         font: 11px 'Geist Mono', ui-monospace, monospace; color: #94A3B8; }
-.brand { display: flex; align-items: center; gap: 12px; }
-.dot { position: relative; width: 8px; height: 8px; }
-.dot i, .dot b { position: absolute; inset: 0; border-radius: 50%; background: #22D3EE; }
-.dot i { box-shadow: 0 0 8px rgba(34,211,238,.8); }
-.dot b { opacity: .6; animation: ping 1s cubic-bezier(0,0,.2,1) infinite; }
-.paused .dot b { display: none; }
-@keyframes ping { 75%, 100% { transform: scale(2); opacity: 0; } }
-.tagline { font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: #F1F5F9; }
-.controls { display: flex; gap: 8px; }
-button { display: flex; align-items: center; gap: 6px; padding: 6px 10px; cursor: pointer;
-         font: 10px 'Geist Mono', ui-monospace, monospace; color: #F1F5F9;
-         background: rgba(17,24,39,.7); border: 1px solid #263449; border-radius: 8px;
-         -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
-         transition: border-color .18s ease, color .18s ease; }
-button:hover { border-color: rgba(34,211,238,.6); color: #A5F3FC; }
-button:focus-visible { outline: 2px solid #22D3EE; outline-offset: 2px; }
-button svg { width: 12px; height: 12px; flex: none; }
-#pulse svg { color: #22D3EE; }
-#pulse .label { display: none; }
-main { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
-h1 { margin: 0; font: 900 48px/1 'Geist Mono', ui-monospace, monospace; letter-spacing: -0.05em;
-     text-transform: uppercase; color: transparent;
-     background: linear-gradient(135deg, #FFFFFF, #CFFAFE 50%, #C4B5FD);
-     -webkit-background-clip: text; background-clip: text;
-     filter: drop-shadow(0 0 24px rgba(34,211,238,.25)); }
-.sub { margin: 0; max-width: 36rem; padding: 6px 16px; font-size: 13px; color: #94A3B8;
-       background: rgba(8,11,20,.6); border: 1px solid rgba(38,52,73,.8); border-radius: 999px;
-       -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
-.spacer { height: 24px; }
-@media (min-width: 640px) { h1 { font-size: 72px; } #pulse .label { display: inline; } }
-@media (min-width: 768px) { h1 { font-size: 96px; } .overlay { padding: 28px; } }
-@media (prefers-reduced-motion: reduce) { .dot b { display: none; } }
-</style></head>
-<body>
-<div class="qs" id="qs">
-  <canvas id="canvas" aria-hidden="true"></canvas>
-  <div class="edge"></div>
-  <div class="overlay">
-    <header>
-      <div class="brand"><span class="dot"><b></b><i></i></span><span class="tagline" id="tagline"></span></div>
-      <div class="controls">
-        <button type="button" id="pulse" title="Trigger Shockwave" aria-label="Trigger shockwave">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>
-          <span class="label">PULSE</span>
-        </button>
-        <button type="button" id="toggle" aria-pressed="false"><span id="toggle-icon"></span><span id="toggle-text"></span></button>
-      </div>
-    </header>
-    <main><h1 id="headline"></h1><p class="sub" id="subtitle"></p></main>
-    <div class="spacer"></div>
-  </div>
-</div>
-<script>
-(() => {
-  const P = __PARAMS__;
-  const CYAN = [34, 211, 238], VIOLET = [139, 92, 246], BG = "#080B14";
-  const ICON_PAUSE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/></svg>';
-  const ICON_PLAY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>';
-  const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(", ");
-
-  const root = document.getElementById("qs");
-  const canvas = document.getElementById("canvas");
-  const ctx = canvas.getContext("2d", { alpha: false });
-  const toggle = document.getElementById("toggle");
-  document.getElementById("headline").textContent = P.headline;
-  document.getElementById("tagline").textContent = P.tagline;
-  const subtitle = document.getElementById("subtitle");
-  if (P.subtitle) subtitle.textContent = P.subtitle; else subtitle.remove();
-
-  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  let running = !reducedMotion;
-  let visible = true;      // false while the hero is scrolled out of view
-  let needsFrame = true;   // paint one still frame even when paused (first paint, resize)
-  let time = 0;
-  let particles = [];
-  const dim = { width: 0, height: 0, cx: 0, cy: 0 };
-  const pointer = { x: -2000, y: -2000, isDown: false, radius: 150, shockwaves: [] };
-
-  function setRunning(value) {
-    running = value;
-    root.classList.toggle("paused", !value);
-    document.getElementById("toggle-icon").innerHTML = value ? ICON_PAUSE : ICON_PLAY;
-    document.getElementById("toggle-text").textContent = value ? "FREEZE" : "RUN";
-    toggle.setAttribute("aria-pressed", String(!value));
-  }
-
-  // Golden-angle spiral (sunflower), denser toward the center.
-  function buildSwarm() {
-    const { width, height, cx, cy } = dim;
-    if (width === 0 || height === 0) return;
-    const angleIncrement = Math.PI * 2 * ((1 + Math.sqrt(5)) / 2);
-    const maxRadius = Math.max(width, height) * 0.45;
-    const n = P.particleCount;
-    particles = [];
-    for (let i = 0; i < n; i++) {
-      const t = Math.pow(i / (n - 1), 0.6);
-      const dst = t * maxRadius;
-      const angle = i * angleIncrement;
-      particles.push({
-        x: cx + Math.cos(angle) * dst, y: cy + Math.sin(angle) * dst, vx: 0, vy: 0,
-        baseX: 0, baseY: 0, angle: angle, distance: dst,
-        size: Math.random() * 1.5 + 0.5, excitation: 0,
-        color: mix(CYAN, VIOLET, t),   // cyan core -> violet rim
-      });
-    }
-  }
-
-  new ResizeObserver((entries) => {
-    for (const entry of entries) {
-      const rect = entry.contentRect;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);  // cap DPR for performance
-      Object.assign(dim, { width: rect.width, height: rect.height, cx: rect.width / 2, cy: rect.height / 2 });
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.scale(dpr, dpr);
-      buildSwarm();
-      needsFrame = true;
-    }
-  }).observe(root);
-  new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; }).observe(root);
-
-  function loop() {
-    const animate = running && visible;
-    if (!animate && !needsFrame) { requestAnimationFrame(loop); return; }
-    needsFrame = false;
-    if (animate) time += 0.002;  // global rotation speed
-    const { width, height, cx, cy } = dim;
-    const cyan = CYAN.join(", "), violet = VIOLET.join(", ");
-
-    // 1. Background: deep navy with soft cyan / violet nebulae
-    ctx.fillStyle = BG;
-    ctx.fillRect(0, 0, width, height);
-    const glowCyan = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(width, height) * 0.45);
-    glowCyan.addColorStop(0, `rgba(${cyan}, 0.10)`);
-    glowCyan.addColorStop(1, `rgba(${cyan}, 0)`);
-    ctx.fillStyle = glowCyan;
-    ctx.fillRect(0, 0, width, height);
-    const glowViolet = ctx.createRadialGradient(width, height, 0, width, height, width * 0.6);
-    glowViolet.addColorStop(0, `rgba(${violet}, 0.14)`);
-    glowViolet.addColorStop(1, `rgba(${violet}, 0)`);
-    ctx.fillStyle = glowViolet;
-    ctx.fillRect(0, 0, width, height);
-
-    // 2. Shockwaves expand and fade
-    for (let s = pointer.shockwaves.length - 1; s >= 0; s--) {
-      const sw = pointer.shockwaves[s];
-      sw.radius += 15;
-      sw.strength *= 0.92;
-      if (sw.radius > sw.maxRadius || sw.strength < 0.01) pointer.shockwaves.splice(s, 1);
-    }
-
-    // 3. Physics: spring to the rotating orbit, pointer repulsion, shockwave impulses
-    for (const p of particles) {
-      const currentAngle = p.angle + time * (1 + 100 / (p.distance + 100));  // inner particles rotate faster
-      p.baseX = cx + Math.cos(currentAngle) * p.distance;
-      p.baseY = cy + Math.sin(currentAngle) * p.distance;
-      p.vx += (p.baseX - p.x) * 0.02;
-      p.vy += (p.baseY - p.y) * 0.02;
-
-      const dxP = p.x - pointer.x, dyP = p.y - pointer.y;
-      const distP = Math.sqrt(dxP * dxP + dyP * dyP);
-      if (distP < pointer.radius && distP > 0) {
-        const force = (pointer.radius - distP) / pointer.radius;
-        const direction = pointer.isDown ? -0.5 : 1.5;  // pressed: pull in slightly
-        p.vx += (dxP / distP) * force * direction;
-        p.vy += (dyP / distP) * force * direction;
-        p.excitation = Math.max(p.excitation, force);
-      }
-
-      for (const sw of pointer.shockwaves) {
-        const dxS = p.x - sw.x, dyS = p.y - sw.y;
-        const distS = Math.sqrt(dxS * dxS + dyS * dyS);
-        const ringDelta = Math.abs(distS - sw.radius);
-        if (ringDelta < 30) {
-          const impulse = (1 - ringDelta / 30) * sw.strength * 15;
-          p.vx += (dxS / distS) * impulse;
-          p.vy += (dyS / distS) * impulse;
-          p.excitation = Math.max(p.excitation, 1.0);
-        }
-      }
-
-      p.vx *= 0.88;  // damping
-      p.vy *= 0.88;
-      p.x += p.vx;
-      p.y += p.vy;
-      p.excitation *= 0.95;
-    }
-
-    // 4. Constellation lines between near neighbours (limited look-ahead keeps it cheap)
-    ctx.lineWidth = 0.6;
-    for (let i = 0; i < particles.length; i++) {
-      const p1 = particles[i];
-      const limit = Math.min(particles.length, i + 15);
-      for (let j = i + 1; j < limit; j++) {
-        const p2 = particles[j];
-        const dx = p1.x - p2.x, dy = p1.y - p2.y;
-        const distSq = dx * dx + dy * dy;
-        if (distSq < 3600) {
-          const opacity = 1 - Math.sqrt(distSq) / 60;
-          const excitation = Math.max(p1.excitation, p2.excitation);
-          const alpha = Math.min(1, opacity * 0.2 + excitation * 0.5);
-          ctx.strokeStyle = `rgba(${cyan}, ${alpha})`;
-          ctx.beginPath();
-          ctx.moveTo(p1.x, p1.y);
-          ctx.lineTo(p2.x, p2.y);
-          ctx.stroke();
-        }
-      }
-    }
-
-    // 5. Particles, with a halo when excited
-    for (const p of particles) {
-      const radius = p.size + p.excitation * 2.5;
-      ctx.fillStyle = `rgb(${p.color})`;
-      if (p.excitation > 0.3) {
-        ctx.save();
-        ctx.globalAlpha = p.excitation * 0.4;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, radius * 3, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    requestAnimationFrame(loop);
-  }
-
-  const local = (e) => { const r = root.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
-  root.addEventListener("mousemove", (e) => { [pointer.x, pointer.y] = local(e); });
-  root.addEventListener("mousedown", (e) => {
-    pointer.isDown = true;
-    const [x, y] = local(e);
-    pointer.shockwaves.push({ x: x, y: y, radius: 10, maxRadius: 200, strength: 0.8 });
-  });
-  root.addEventListener("mouseup", () => { pointer.isDown = false; });
-  root.addEventListener("mouseleave", () => { pointer.x = -2000; pointer.y = -2000; pointer.isDown = false; });
-  document.getElementById("pulse").addEventListener("click", () => {
-    pointer.shockwaves.push({ x: dim.cx, y: dim.cy, radius: 10,
-                              maxRadius: Math.max(dim.width, dim.height) * 0.8, strength: 1.5 });
-  });
-  toggle.addEventListener("click", () => setRunning(!running));
-
-  setRunning(running);
-  requestAnimationFrame(loop);
-})();
-</script>
-</body></html>
-"""
-
-
-def quantum_swarm_hero(headline, tagline, subtitle=None, particle_count=280, height=300):
-    params = json.dumps(
-        {"headline": headline, "tagline": tagline, "subtitle": subtitle, "particleCount": particle_count}
-    ).replace("<", "\\u003c")  # keep the JSON from closing the <script> tag
-    components.html(_QUANTUM_SWARM_HTML.replace("__PARAMS__", params), height=height)
+def hero(title, eyebrow, subtitle=None):
+    sub = f'<p class="pil-hero-sub">{subtitle}</p>' if subtitle else ""
+    _md(
+        '<div class="pil-hero">'
+        f'<div class="pil-hero-art">{_glyph_svg()}</div>'
+        f'<div class="pil-eyebrow">{eyebrow}</div>'
+        f'<h1 class="pil-hero-title">{title}</h1>'
+        f"{sub}</div>"
+    )
 
 
 inject_css()
@@ -1356,12 +1105,10 @@ def _use_example_chip(name, smiles):
 # ---------------------------------------------------------------------------
 HERO_SUBTITLE = "AI-powered prediction of polymer properties from molecular structure."
 
-quantum_swarm_hero(
-    headline="POLYMER",
-    tagline="Polymer Intelligence Lab",
+hero(
+    title="Polymer Intelligence Lab",
+    eyebrow="Structure → Property",
     subtitle=HERO_SUBTITLE,
-    particle_count=280,
-    height=300,
 )
 
 # Reflects which model files are actually present -- nothing is loaded here.
@@ -1767,9 +1514,9 @@ with tab4:
                         plt.close(fig)
 
                         callout(
-                            "<b>How to read this:</b> the solid cyan curve is the "
+                            "<b>How to read this:</b> the solid emerald curve is the "
                             "DeepONet's instant prediction. If you enabled the "
-                            "comparison, the dashed violet curve is what the Phase 3 PINN "
+                            "comparison, the dashed amber curve is what the Phase 3 PINN "
                             "predicts after training from scratch for this same D "
                             "&mdash; the two should look similar, illustrating the "
                             "speed/accuracy tradeoff described above."

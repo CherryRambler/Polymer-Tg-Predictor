@@ -1,31 +1,31 @@
-# Native Streamlit theme for the "Polymer Intelligence Lab" design system.
-# Widgets (inputs, sliders, tabs, alerts, dataframes, metrics) pick these up
-# directly, so ui_theme.py only needs CSS for the custom HTML pieces.
-# Keep in sync with ui_theme.TOKENS and frontend/src/lib/design-tokens.ts.
+# Native Streamlit theme for the "Polymer Intelligence Lab" design system
+# (graphite + emerald/amber). Widgets (inputs, sliders, tabs, alerts,
+# dataframes, metrics) pick these up directly, so app.py only needs CSS for
+# the custom HTML pieces. Keep in sync with TOKENS in app.py.
 
 [theme]
 base = "dark"
-primaryColor = "#22D3EE"
-backgroundColor = "#080B14"
-secondaryBackgroundColor = "#111827"
-textColor = "#F1F5F9"
-linkColor = "#22D3EE"
-borderColor = "#263449"
+primaryColor = "#2DD4A4"
+backgroundColor = "#0C0E0F"
+secondaryBackgroundColor = "#161A1B"
+textColor = "#E8ECEA"
+linkColor = "#2DD4A4"
+borderColor = "#2A3134"
 showWidgetBorder = true
-dataframeBorderColor = "#263449"
-dataframeHeaderBackgroundColor = "#151D2E"
-codeBackgroundColor = "#0D1220"
-baseRadius = "10px"
-buttonRadius = "10px"
+dataframeBorderColor = "#2A3134"
+dataframeHeaderBackgroundColor = "#1C2123"
+codeBackgroundColor = "#111415"
+baseRadius = "8px"
+buttonRadius = "8px"
 
-font = "Geist:https://fonts.googleapis.com/css2?family=Geist:wght@300..800&display=swap, sans-serif"
-headingFont = "Geist, sans-serif"
-codeFont = "Geist Mono:https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400..600&display=swap, monospace"
+font = "IBM Plex Sans:https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap, sans-serif"
+headingFont = "IBM Plex Sans, sans-serif"
+codeFont = "IBM Plex Mono:https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap, monospace"
 
-blueColor = "#22D3EE"
-violetColor = "#8B5CF6"
+blueColor = "#2DD4A4"
+violetColor = "#F59E0B"
 yellowColor = "#FBBF24"
-greenColor = "#34D399"
-redColor = "#FB7185"
+greenColor = "#4ADE80"
+redColor = "#F87171"
 
-chartCategoricalColors = ["#22D3EE", "#A78BFA", "#FBBF24", "#34D399", "#FB7185"]
+chartCategoricalColors = ["#2DD4A4", "#FBBF24", "#F87171", "#4ADE80", "#9AA5A1"]
