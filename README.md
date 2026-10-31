@@ -81,13 +81,63 @@ category via `src/phase1_baseline/filter_reliable_data.py`.
 
 ## Architecture
 
-![Architecture: data pipeline, Tg models, diffusion models, evaluation and the Streamlit app](docs/architecture.svg)
+```mermaid
+flowchart LR
+    subgraph OFF["Offline training (run once, by hand)"]
+        DATA[("data/raw/<br/>PolyMetriX Tg CSV")]
+        TB["train_baseline.py"]
+        GT["gnn_train.py"]
+        ANA["Analytical Fourier solution<br/>for many D values"]
+        TD["train_deeponet.py"]
+    end
+    subgraph MOD["Saved model files (committed)"]
+        XGBW[("models/xgboost_tg.joblib")]
+        GNNW[("models/gnn_tg.pt")]
+        DONW[("models/deeponet_diffusion.pt")]
+    end
+    subgraph APP["Streamlit app (app.py)"]
+        SMI(["SMILES input"])
+        FP["Morgan fingerprint<br/>radius 2, 256 bits"]
+        GR["Molecular graph<br/>atoms = nodes, bonds = edges"]
+        ENS{{"Tg = 0.5 x XGBoost + 0.5 x GNN"}}
+        DSL(["D slider, 0.01 to 1.0"])
+        PINN["PINN, trained live from the PDE only<br/>no dataset, no saved weights, cached per D"]
+        DON["DeepONet inference<br/>one forward pass"]
+        RC{{"Release curve C(x = 0.5, t)"}}
+    end
 
-Each model goes training script → saved weights → app. Dashed arrows are
-offline scripts reading saved files. In the app, D comes from the slider.
+    DATA --> TB --> XGBW
+    DATA --> GT --> GNNW
+    ANA --> TD --> DONW
 
-The diagram is generated: edit `docs/gen_architecture.py`, then run
-`python docs/gen_architecture.py` to rewrite `docs/architecture.svg`.
+    SMI --> FP --> XGBW
+    SMI --> GR --> GNNW
+    XGBW --> ENS
+    GNNW --> ENS
+
+    DSL --> PINN --> RC
+    DSL --> DON --> RC
+    DONW --> DON
+
+    classDef file fill:#fff7e6,stroke:#b7791f,color:#1a202c
+    classDef code fill:#ebf4ff,stroke:#3182ce,color:#1a202c
+    classDef io fill:#e6fffa,stroke:#2c7a7b,color:#1a202c
+    classDef out fill:#f0fff4,stroke:#2f855a,stroke-width:2px,color:#1a202c
+    class DATA,XGBW,GNNW,DONW file
+    class TB,GT,ANA,TD,FP,GR,PINN,DON code
+    class SMI,DSL io
+    class ENS,RC out
+```
+
+Cylinders are stored files (data and model weights); rectangles are code.
+The same SMILES feeds both Tg models. D comes **only** from the slider: it
+is not predicted from the polymer structure. The PINN has no training data
+and no saved weights. It is trained inside the app, from the diffusion
+equation alone, whenever you tick its box, and the result is cached per D.
+
+A more detailed diagram, with every script and evaluation step, is in
+[docs/architecture.svg](docs/architecture.svg). It is generated: edit
+`docs/gen_architecture.py`, then run `python docs/gen_architecture.py`.
 
 ## Project structure
 
