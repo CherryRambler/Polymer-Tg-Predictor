@@ -1,5 +1,6 @@
 # Polymer Tg Predictor
 
+[![tests](https://github.com/CherryRambler/Polymer-Tg-Predictor/actions/workflows/tests.yml/badge.svg)](https://github.com/CherryRambler/Polymer-Tg-Predictor/actions/workflows/tests.yml)
 [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://polymer-tg-predictor-8vh4dgb7geuxqwqkgyxqmg.streamlit.app/)
 
 **Live demo:** [polymer-tg-predictor-8vh4dgb7geuxqwqkgyxqmg.streamlit.app](https://polymer-tg-predictor-8vh4dgb7geuxqwqkgyxqmg.streamlit.app/)

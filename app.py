@@ -3,9 +3,11 @@ app.py
 
 Purpose: A Streamlit web app frontend for the whole project -- lets a
 person type in a polymer's SMILES string and get:
-  1. Predicted glass transition temperature (Tg), from the Phase 1 model
-  2. A predicted drug-release curve, from the Phase 3 PINN, using a
-     structure-derived diffusion coefficient
+  1. Predicted glass transition temperature (Tg): the 50/50 average of the
+     Phase 1 XGBoost model and the Phase 2 GNN
+  2. An illustrative drug-release curve from the Phase 4 DeepONet (and,
+     optionally, a live-trained Phase 3 PINN) for a diffusion coefficient D
+     that the user sets with a slider. D is NOT predicted from structure.
 
 Run locally:
     streamlit run app.py
@@ -48,13 +50,6 @@ try:
     from gnn_inference import predict_gnn_tg  # noqa: E402
 except ImportError:
     GNN_AVAILABLE = False
-
-PERMEABILITY_AVAILABLE = True
-try:
-    # pyrefly: ignore [missing-import]
-    from permeability_to_D import permeability_to_D  # noqa: E402
-except ImportError:
-    PERMEABILITY_AVAILABLE = False
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src", "phase4_neural_operator"))
 
@@ -1351,12 +1346,6 @@ def load_gnn_model():
 
 
 @st.cache_resource
-def load_permeability_model():
-    """Load the Phase 3 permeability model. Caller must check os.path.exists first."""
-    return joblib.load("models/permeability_xgb.joblib")
-
-
-@st.cache_resource
 def load_deeponet_model():
     """Load the Phase 4 DeepONet. Caller must check os.path.exists first."""
     model = DeepONet(hidden_dim=64, n_hidden_layers=3, latent_dim=64)
@@ -1364,29 +1353,6 @@ def load_deeponet_model():
     model.load_state_dict(state)
     model.eval()
     return model
-
-
-def get_structure_driven_D(smiles, parsed_ok):
-    """Predict an effective diffusion coefficient D from a SMILES string,
-    via the Phase 3 permeability model + permeability_to_D(), if both are
-    available. Returns None if the permeability pipeline isn't available,
-    the SMILES doesn't parse, or anything goes wrong -- callers should
-    treat None as "fall back to manual D".
-
-    Shared by the PINN and DeepONet release curves so they always agree on the same structure-to-D value
-    for a given polymer.
-    """
-    if not (PERMEABILITY_AVAILABLE and os.path.exists("models/permeability_xgb.joblib") and parsed_ok):
-        return None
-    try:
-        perm_model = load_permeability_model()
-        X_perm = featurize_smiles(smiles)
-        if X_perm is None:
-            return None
-        log10_permeability = float(perm_model.predict(X_perm)[0])
-        return permeability_to_D(log10_permeability)
-    except Exception:
-        return None
 
 
 def featurize_smiles(smiles, n_bits=256, radius=2):
@@ -1480,7 +1446,7 @@ deeponet_ready = DEEPONET_AVAILABLE and os.path.exists("models/deeponet_diffusio
 
 # Widget defaults live in session state (not in value=...), so the inputs keep
 # their values across pages without Streamlit's "default value + Session State"
-# warning. use_structure_D is seeded on the Calculations page, where D is known.
+# warning.
 st.session_state.setdefault("D_slider", 0.3)
 st.session_state.setdefault("train_pinn", not deeponet_ready)
 st.session_state.setdefault("batch_text", "CC(c1ccccc1)C\nCC\nCC(C)(C(=O)OC)C")
@@ -1488,7 +1454,7 @@ st.session_state.setdefault("batch_text", "CC(c1ccccc1)C\nCC\nCC(C)(C(=O)OC)C")
 # Streamlit drops a widget's session-state value on any run where that widget
 # isn't rendered. The calculation inputs only render on the Calculations page,
 # so re-assign them every run to keep them while the user is on other pages.
-for _key in ("smiles_value", "polymer_choice", "use_structure_D", "D_slider",
+for _key in ("smiles_value", "polymer_choice", "D_slider",
              "train_pinn", "batch_text"):
     if _key in st.session_state:
         st.session_state[_key] = st.session_state[_key]
@@ -1675,8 +1641,8 @@ if page == "overview":
                 "polymers with few similar neighbors in the training data.",
                 "The DeepONet is least accurate near the low-D extreme and can dip slightly "
                 "below zero concentration at high D.",
-                "D is not yet reliably predicted from structure: it is set manually, or comes "
-                "from a permeability-derived proxy where that model is available.",
+                "D is not predicted from structure: you set it with a slider. The release "
+                "curve is illustrative, not a measured drug-diffusion result.",
             ])
 
     with st.expander("Architecture diagram", icon=":material/account_tree:"):
@@ -1765,34 +1731,15 @@ elif page == "calculate":
                 "Drug release parameters",
                 "Effective diffusion coefficient for the release simulation.",
             )
-            # Structure-driven D (Phase 3 permeability model), if available
-            auto_D = get_structure_driven_D(smiles_input, _parsed_ok)
-            if auto_D is not None:
-                st.info(
-                    f"🔬 Predicted CO₂ permeability suggests an effective diffusion "
-                    f"coefficient of **D ≈ {auto_D:.2f}**. This is derived from the "
-                    f"structure's predicted permeability as a physically-related "
-                    f"proxy — not a literally measured drug-diffusion coefficient."
-                )
-
-            st.session_state.setdefault("use_structure_D", auto_D is not None)
-            use_structure_D = st.checkbox(
-                "Use structure-predicted D",
-                disabled=(auto_D is None),
-                key="use_structure_D",
-            )
-
             field_label("Effective diffusion coefficient (D)")
             D_value = st.slider(
                 "Effective diffusion coefficient (D)",
                 min_value=0.01, max_value=1.0, step=0.01,
-                help="Higher D = faster release. In the full project this comes from a permeability model; here it's a direct slider so you can explore.",
+                help="Higher D = faster release. D is set by you, not predicted from the polymer "
+                     "structure (dimensionless units: slab thickness 1, time 0-5).",
                 label_visibility="collapsed",
                 key="D_slider",
             )
-
-            if use_structure_D and auto_D is not None:
-                D_value = auto_D
 
             release_speed = "slow release" if D_value < 0.33 else "moderate release" if D_value < 0.66 else "fast release"
             readout("D", f"{D_value:.2f}", release_speed)
@@ -1844,7 +1791,6 @@ elif page == "calculate":
             "smiles": smiles_input,
             "name": polymer_name,
             "D": float(D_value),
-            "D_from_structure": bool(use_structure_D and auto_D is not None),
             "tg": None, "tg_error": False,
             "deeponet": None, "pinn": None, "release_error": False,
             "batch": None,
@@ -1920,7 +1866,7 @@ elif page == "results":
             st.button("Go to Calculations", key="to_calc_empty", type="primary",
                       icon=":material/arrow_back:", on_click=go_to, args=("calculate",))
     else:
-        D_note = "structure-predicted" if run["D_from_structure"] else "manual"
+        D_note = "set by slider"
         _md(
             '<div class="pil-run">'
             f'<span>Polymer <span class="v">{esc(run["name"])}</span></span>'
@@ -2024,8 +1970,9 @@ elif page == "results":
                         hint("The PINN uses a reduced, faster training run than the fully validated "
                              "version: treat its curve's shape as illustrative, not precise.")
             st.caption(
-                "The drug-release D is a permeability-derived proxy, not a literal "
-                "drug-diffusion coefficient. See the GitHub README for full methodology and limitations."
+                "D comes from the slider: it is not predicted from the polymer structure and is not "
+                "a measured drug-diffusion coefficient, so this curve is illustrative. See the GitHub "
+                "README for full methodology and limitations."
             )
 
         # ---- Batch ----

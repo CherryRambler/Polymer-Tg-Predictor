@@ -20,9 +20,8 @@ directly. We use (b), for two reasons:
      per D takes ~20-30 seconds; for even 50 D values that's ~20 minutes
      just to build the dataset, before the DeepONet itself is trained.
 
-Sampling range: D in [0.01, 1.0], matching the range used by the
-Drug Release tab's D slider and by permeability_to_D.py's target range,
-so the DeepONet is valid across the exact D values the app can produce.
+Sampling range: D in [0.01, 1.0], matching the range of the app's D
+slider, so the DeepONet covers every D value the app can produce.
 """
 
 import os
