@@ -1,0 +1,18 @@
+{
+  "model_file": "models/gnn_tg.pt",
+  "split": "gnn_train.split_data, 80/10/10, random.seed(42)",
+  "n_test": 737,
+  "gnn": {
+    "mae": 28.465589242195016,
+    "r2": 0.8295056703860748
+  },
+  "xgboost_cv_on_same_polymers": {
+    "mae": 29.283649086952654,
+    "r2": 0.8361205253296011
+  },
+  "ensemble_50_50": {
+    "mae": 26.096031363095396,
+    "r2": 0.8588702528314953
+  },
+  "note": "XGBoost predictions are 5-fold cross-validated (results/cv_predictions.csv). GNN training seed was not fixed in gnn_train.py, so retraining gives slightly different numbers."
+}

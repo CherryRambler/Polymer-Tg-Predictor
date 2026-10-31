@@ -56,9 +56,13 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src", "phase4_neural
 DEEPONET_AVAILABLE = True
 try:
     # pyrefly: ignore [missing-import]
-    from deeponet_model import DeepONet  # noqa: E402
+    from deeponet_model import load_deeponet  # noqa: E402
 except ImportError:
     DEEPONET_AVAILABLE = False
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src", "analysis"))
+# pyrefly: ignore [missing-import]
+from uncertainty import interval, max_tanimoto, morgan_fp  # noqa: E402
 
 st.set_page_config(
     page_title="Polymer Intelligence Lab",
@@ -1348,11 +1352,27 @@ def load_gnn_model():
 @st.cache_resource
 def load_deeponet_model():
     """Load the Phase 4 DeepONet. Caller must check os.path.exists first."""
-    model = DeepONet(hidden_dim=64, n_hidden_layers=3, latent_dim=64)
-    state = torch.load("models/deeponet_diffusion.pt", map_location="cpu", weights_only=True)
-    model.load_state_dict(state)
-    model.eval()
-    return model
+    return load_deeponet("models/deeponet_diffusion.pt")
+
+
+@st.cache_resource
+def load_training_fingerprints():
+    """Morgan fingerprints of every polymer the deployed XGBoost trained on,
+    for the 'unlike the training data' warning."""
+    df = pd.read_csv("data/raw/polymer_tg_polymetrix_reliable.csv")
+    return [fp for fp in (morgan_fp(s) for s in df["repeat_unit_smiles"]) if fp is not None]
+
+
+def load_uncertainty():
+    """Conformal interval + warning thresholds saved by src/analysis/uncertainty.py.
+    Returns None if the file is missing -- callers then show no interval
+    rather than a made-up one."""
+    path = os.path.join(os.path.dirname(__file__), "results", "uncertainty.json")
+    try:
+        with open(path) as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return None
 
 
 def featurize_smiles(smiles, n_bits=256, radius=2):
@@ -1583,7 +1603,7 @@ if page == "overview":
     if _phase4_eval is not None:
         _phase4_result = (
             f"MAE {_phase4_eval['mae']:.4f}, R² {_phase4_eval['r2']:.3f} "
-            f"on held-out D values"
+            f"on held-out D values inside the trained range"
         )
     else:
         _phase4_result = "not yet validated (run deeponet_evaluate.py)"
@@ -1592,7 +1612,7 @@ if page == "overview":
         ("1", "Classical ML baseline", "Random Forest / XGBoost on Morgan fingerprints",
          "XGBoost MAE 27.5°C, R² 0.87"),
         ("2", "Graph Neural Network", "GINEConv message passing on the molecular graph, averaged with XGBoost",
-         "Ensemble MAE 26.7°C, R² 0.855"),
+         "Ensemble MAE 26.1°C, R² 0.859 (random split)"),
         ("3", "Physics-Informed NN", "Diffusion PDE (Fick's second law), trained with a physics loss only",
          "Mean error 0.0062 vs. exact solution"),
         ("4", "Neural Operator", "DeepONet learning the diffusion PDE across many D values",
@@ -1625,7 +1645,9 @@ if page == "overview":
             card_header("Rigor checks")
             bullet_list([
                 "<b>Scaffold split</b> (no shared Murcko scaffold between train and test): "
-                "XGBoost MAE 39.7°C, R² 0.772 — the more honest estimate for novel structures.",
+                "XGBoost MAE 36.3°C, R² 0.795 with the deployed model's settings (39.7°C, R² 0.772 "
+                "with a smaller model), vs 27.5°C on a random split — the more honest estimate "
+                "for novel structures.",
                 "<b>Ensemble weighting</b>: a search over XGBoost/GNN blend weights confirmed "
                 "the 50/50 average as optimal.",
             ])
@@ -1639,8 +1661,10 @@ if page == "overview":
             bullet_list([
                 "A few Tg predictions are badly off (150–300°C), mostly for structurally unusual "
                 "polymers with few similar neighbors in the training data.",
-                "The DeepONet is least accurate near the low-D extreme and can dip slightly "
-                "below zero concentration at high D.",
+                "The Tg interval is calibrated on a random split; for structurally novel polymers "
+                "it is too narrow (it covered 78% of XGBoost's scaffold-split errors, not 90%).",
+                "Outside the trained D range (0.01–1.0) the DeepONet's error grows; inside it, the "
+                "curve can dip very slightly below zero late in the release (worst −0.007).",
                 "D is not predicted from structure: you set it with a slider. The release "
                 "curve is illustrative, not a measured drug-diffusion result.",
             ])
@@ -1814,7 +1838,12 @@ elif page == "calculate":
                         gnn_pred = None
 
                 ensemble_pred = (xgb_pred + gnn_pred) / 2 if gnn_pred is not None else None
-                run["tg"] = {"value": xgb_pred, "gnn_value": gnn_pred, "ensemble_value": ensemble_pred}
+                try:
+                    max_sim = max_tanimoto(morgan_fp(smiles_input), load_training_fingerprints())
+                except Exception:
+                    max_sim = None
+                run["tg"] = {"value": xgb_pred, "gnn_value": gnn_pred, "ensemble_value": ensemble_pred,
+                             "max_similarity": max_sim}
             except Exception:
                 run["tg_error"] = True
 
@@ -1881,7 +1910,20 @@ elif page == "results":
             st.error("⚠ Something went wrong generating this prediction. Please try a different SMILES string.")
         else:
             tg = run["tg"]
-            pred = tg["value"]
+            unc = load_uncertainty()
+            is_ensemble = tg.get("ensemble_value") is not None
+            # The headline is the 50/50 ensemble (the model the interval is
+            # calibrated for); XGBoost alone only if the GNN is unavailable.
+            pred = tg["ensemble_value"] if is_ensemble else tg["value"]
+            model_note = "50/50 XGBoost + GNN ensemble" if is_ensemble else "XGBoost (Phase 1)"
+            interval_text = ""
+            if unc is not None:
+                cal = unc if is_ensemble else unc["xgboost_only"]
+                lo, hi = interval(pred, cal["half_width_C"])
+                cov = cal["empirical_coverage_eval"]
+                # Only call it a 90% interval if the measured coverage backs that up.
+                label = "90% interval" if abs(cov - 0.9) <= 0.05 else f"interval, {cov:.0%} measured coverage"
+                interval_text = f" ({label} {lo:.0f}–{hi:.0f} °C)"
             # Map Tg onto a fixed, clearly-labeled visual scale. Purely a display
             # aid -- the underlying predicted value is used as-is everywhere else.
             scale_min, scale_max = -150.0, 250.0
@@ -1893,7 +1935,7 @@ elif page == "results":
                     "Predicted glass transition temperature",
                     f"{pred:.1f}",
                     "°C",
-                    f"{esc(run['name'])} · XGBoost (Phase 1)",
+                    f"Tg ≈ {pred:.0f} °C{interval_text}<br>{esc(run['name'])} · {model_note}",
                     scale=(pct, scale_min, scale_max),
                 )
             with col_models:
@@ -1912,11 +1954,49 @@ elif page == "results":
                         st.image(img, width="stretch")
                         mol_caption(run["smiles"])
 
+            if unc is not None:
+                dw = unc["disagreement_warning"]
+                gap = abs(tg["value"] - tg["gnn_value"]) if is_ensemble else None
+                if gap is not None and gap > dw["threshold_C"]:
+                    hi_g, lo_g = dw["eval_above_threshold"], dw["eval_at_or_below_threshold"]
+                    st.warning(
+                        f"⚠ The two models disagree: XGBoost and the GNN differ by {gap:.0f} °C "
+                        f"(threshold {dw['threshold_C']:.0f} °C, exceeded by ~10% of held-out polymers). "
+                        f"On held-out polymers above this threshold the ensemble's mean error was "
+                        f"{hi_g['mae']:.0f} °C, versus {lo_g['mae']:.0f} °C below it, and the interval "
+                        f"contained the true Tg {hi_g['coverage']:.0%} of the time. Treat this one with caution."
+                    )
+                sw = unc["similarity_warning"]
+                sim = tg.get("max_similarity")
+                if sim is not None and sim < sw["threshold"]:
+                    lo_s, hi_s = sw["eval_below_threshold"], sw["eval_at_or_above_threshold"]
+                    st.warning(
+                        f"⚠ Unlike the training data: the most similar training polymer has Tanimoto "
+                        f"similarity {sim:.2f} (threshold {sw['threshold']:.2f}). For held-out polymers "
+                        f"this dissimilar the mean error was {lo_s['mae']:.0f} °C, versus "
+                        f"{hi_s['mae']:.0f} °C for the rest."
+                    )
+                sc = unc.get("scaffold_context")
+                scaffold_note = (
+                    f" Novel ring systems are harder: on a scaffold split, where no core structure is shared "
+                    f"between training and test, XGBoost's errors fell inside ±{unc['half_width_C']:.0f} °C only "
+                    f"{sc['random_split_ensemble_half_width_coverage_on_xgb_scaffold_errors']:.0%} of the time."
+                    if sc else ""
+                )
+                st.caption(
+                    f"Interval: split-conformal, from out-of-sample errors of {unc['n_cal']} held-out polymers "
+                    f"(random split); it contained the true Tg for {unc['empirical_coverage_eval']:.0%} of "
+                    f"{unc['n_eval']} other held-out polymers. Random splits are optimistic for new chemistry, "
+                    f"and no scaffold-split predictions exist for the GNN, so this interval is not calibrated "
+                    f"for structurally novel polymers.{scaffold_note}"
+                )
+
             callout(
                 "<b>What this means:</b> below the glass transition temperature, "
                 "the polymer behaves more like a rigid glass. Above it, the "
-                "polymer becomes softer and more rubber-like. Prediction from an "
-                "XGBoost model trained on Morgan fingerprints (Phase 1)."
+                "polymer becomes softer and more rubber-like. Prediction: the "
+                "average of an XGBoost model on Morgan fingerprints (Phase 1) and "
+                "a graph neural network on the molecular graph (Phase 2)."
             )
 
         # ---- Drug release ----

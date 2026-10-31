@@ -56,13 +56,13 @@ NODES = {
     "pt":    ("B", 648, ["pinn_train.py", "Adam + L-BFGS"], "diff", "script"),
     "pw":    ("B", 712, ["pinn_diffusion.pt", "offline run, D = 0.1"], "diff", "file"),
     "ana":   ("B", 776, ["pinn_analytical.py", "exact solution"], "diff", "script"),
-    "gen":   ("B", 840, ["generate_training_data.py", "100 D values, 25×25 grid"], "diff", "script"),
+    "gen":   ("B", 840, ["generate_training_data.py", "200 log-uniform D, 25×40"], "diff", "script"),
     "dm":    ("A", 904, ["deeponet_model.py", "branch (D) + trunk (x, t)"], "diff", "script"),
-    "td":    ("B", 904, ["train_deeponet.py", "Adam, 600 epochs"], "diff", "script"),
+    "td":    ("B", 904, ["train_deeponet.py", "Adam, 1500 epochs"], "diff", "script"),
     "dw":    ("B", 968, ["deeponet_diffusion.pt", "DeepONet weights"], "diff", "file"),
     # 4 · Diffusion evaluation
     "pe":    ("C", 712, ["pinn_evaluate.py", "PINN vs exact, D = 0.1"], "eval", "script"),
-    "de":    ("C", 840, ["deeponet_evaluate.py", "8 held-out D values"], "eval", "script"),
+    "de":    ("C", 840, ["deeponet_evaluate.py", "18 held-out D values"], "eval", "script"),
     # 5 · Streamlit app
     "xgbp":  ("a", 356, ["XGBoost Tg"], "app", "script"),
     "smi":   ("a", 416, ["SMILES input"], "app", "input"),

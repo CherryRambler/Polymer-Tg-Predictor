@@ -12,7 +12,7 @@ We build ALL graphs once here and save them to disk, because building
 graphs from 7,000+ molecules takes real time -- you never want to redo this
 every time you tweak the model architecture or training loop.
 
-Run: python3 src/gnn_data.py
+Run: python src/phase2_gnn/gnn_data.py
 """
 import os
 import pandas as pd

@@ -38,25 +38,70 @@ T_MAX = 5.0
 D_MIN, D_MAX = 0.01, 1.0
 
 
-def generate_dataset(n_D=200, n_x=40, n_t=40, seed=0):
+def exact_solution(x, t, D, L=L, n_terms=400):
+    """The exact C(x, t; D), including at t = 0.
+
+    The Fourier series converges slowly at t = 0 (a truncated series
+    "rings" around the true value of 1 -- the Gibbs effect), so there we
+    use the initial condition itself: C = 1 inside the slab, C = 0 on the
+    two edges (the boundary condition wins at the corner, as it does in the
+    series). For t > 0 the series is used with n_terms terms. With 400
+    terms the first dropped term is smaller than 1e-20 whenever
+    D * t >= 1e-5, which covers every (D, t) point this project uses.
+    """
+    x = np.asarray(x, dtype=float)
+    t = np.asarray(t, dtype=float)
+    C = analytical_solution(x, np.where(t > 0, t, 1.0), D=D, L=L, n_terms=n_terms)
+    C = np.where(t > 0, C, 1.0)
+    C = np.where((x <= 0) | (x >= L), 0.0, C)
+    return C
+
+
+def generate_dataset(n_D=200, n_x=40, n_t=40, seed=0, d_sampling="uniform",
+                     t_spacing="uniform", exact_labels=False):
     """Sample n_D diffusion coefficients and, for each, an n_x by n_t grid
-    of (x, t) query points, labelled with the exact analytical C(x, t; D).
+    of (x, t) query points, labelled with the analytical C(x, t; D).
+
+    Options (defaults reproduce the original Phase 4 recipe):
+      d_sampling   "uniform" draws D uniformly from [D_MIN, D_MAX];
+                   "log_uniform" draws log10(D) uniformly, so D = 0.01..0.1
+                   gets as many samples as D = 0.1..1.0.
+      t_spacing    "uniform" spaces t evenly; "early" uses t = T_MAX * s**2
+                   for evenly spaced s, packing more points near t = 0 where
+                   the solution changes fastest (a data-side way of weighting
+                   the loss toward small t).
+      exact_labels False uses the 50-term series everywhere (it rings at
+                   t = 0); True uses exact_solution().
 
     Returns three flat arrays (D_vals, x_vals, t_vals) and a matching
     C_vals array, all the same length (n_D * n_x * n_t).
     """
     rng = np.random.default_rng(seed)
 
-    D_samples = rng.uniform(D_MIN, D_MAX, size=n_D)
+    if d_sampling == "uniform":
+        D_samples = rng.uniform(D_MIN, D_MAX, size=n_D)
+    elif d_sampling == "log_uniform":
+        D_samples = 10 ** rng.uniform(np.log10(D_MIN), np.log10(D_MAX), size=n_D)
+    else:
+        raise ValueError(f"unknown d_sampling {d_sampling!r}")
+
     x_grid = np.linspace(0, L, n_x)
-    t_grid = np.linspace(0, T_MAX, n_t)
+    if t_spacing == "uniform":
+        t_grid = np.linspace(0, T_MAX, n_t)
+    elif t_spacing == "early":
+        t_grid = T_MAX * np.linspace(0, 1, n_t) ** 2
+    else:
+        raise ValueError(f"unknown t_spacing {t_spacing!r}")
 
     D_out, x_out, t_out, C_out = [], [], [], []
     for D in D_samples:
         xx, tt = np.meshgrid(x_grid, t_grid, indexing="ij")
         xx_flat = xx.flatten()
         tt_flat = tt.flatten()
-        C_flat = analytical_solution(xx_flat, tt_flat, D=D, L=L)
+        if exact_labels:
+            C_flat = exact_solution(xx_flat, tt_flat, D=D, L=L)
+        else:
+            C_flat = analytical_solution(xx_flat, tt_flat, D=D, L=L)
 
         D_out.append(np.full_like(xx_flat, D))
         x_out.append(xx_flat)

@@ -7,7 +7,7 @@ to predict polymer Tg from our featurized data.
 Uses 5-fold cross-validation so every row gets used for testing exactly
 once, giving a stable performance estimate.
 
-Run: python3 src/train_baseline.py
+Run: python src/phase1_baseline/train_baseline.py
 """
 
 import pandas as pd

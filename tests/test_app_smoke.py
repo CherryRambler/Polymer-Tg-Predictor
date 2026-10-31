@@ -31,7 +31,10 @@ RUNTIME_FILES = [
     "models/gnn_tg.pt",
     "models/deeponet_diffusion.pt",
     "results/deeponet_evaluation.json",
+    "results/uncertainty.json",
+    "data/raw/polymer_tg_polymetrix_reliable.csv",
     "docs/architecture.svg",
+    "src/analysis/uncertainty.py",
     # Python modules app.py imports from src/
     "src/phase2_gnn/gnn_model.py",
     "src/phase2_gnn/gnn_inference.py",
@@ -103,4 +106,6 @@ def test_calculate_runs_all_models_without_exception(monkeypatch):
     assert run["pinn"] is None, "the PINN should not train unless asked"
     labels = [m.label for m in at.metric]
     assert "Ensemble average" in labels
+    assert run["tg"]["max_similarity"] is not None
+    assert any("split-conformal" in c.value for c in at.caption), "uncertainty caption missing"
     assert not at.error, [e.value for e in at.error]

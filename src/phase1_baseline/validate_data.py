@@ -6,7 +6,7 @@ into a valid molecule by RDKit. This is step 1 of preprocessing for ANY
 cheminformatics ML project — invalid SMILES will silently crash or corrupt
 everything downstream if you don't catch them first.
 
-Run: python3 src/validate_data.py
+Run: python src/phase1_baseline/validate_data.py
 """
 
 import pandas as pd

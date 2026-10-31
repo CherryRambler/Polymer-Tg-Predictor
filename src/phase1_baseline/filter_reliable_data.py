@@ -10,7 +10,7 @@ to be wrong." Dropping it removed 96% of our data for the wrong reason.
 across multiple sources, Z-score > 2" -- genuine unreliability. That's
 what we should filter on instead.
 
-Run: python3 src/filter_reliable_data.py
+Run: python src/phase1_baseline/filter_reliable_data.py
 """
 
 import pandas as pd

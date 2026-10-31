@@ -10,7 +10,7 @@ a model can learn from. We compute two feature sets:
 Both are saved to data/processed/ so downstream training scripts never
 need to touch RDKit directly.
 
-Run: python3 src/featurize.py
+Run: python src/phase1_baseline/featurize.py
 """
 
 import pandas as pd

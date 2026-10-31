@@ -4,7 +4,7 @@ gnn_train.py
 Purpose: Train the GNN on our pre-built polymer graphs and evaluate it,
 same metrics (MAE, R2) as Phase 1 so results are directly comparable.
 
-Run: python3 src/gnn_train.py    (run from the project root folder)
+Run: python src/phase2_gnn/gnn_train.py    (run from the project root folder)
 """
 
 import torch

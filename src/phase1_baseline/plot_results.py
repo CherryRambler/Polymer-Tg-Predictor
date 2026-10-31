@@ -6,7 +6,7 @@ A single MAE number hides WHICH polymers are predicted well vs poorly --
 this plot reveals patterns a metric can't (e.g., "the model consistently
 underpredicts high-Tg rigid polymers").
 
-Run: python3 src/plot_results.py
+Run: python src/phase1_baseline/plot_results.py
 """
 
 import pandas as pd

@@ -15,7 +15,7 @@ overfitting, just inside a physics loss instead of a normal dataset. Fixed
 by resampling fresh points across multiple smaller L-BFGS rounds instead
 of one large one.
 
-Run: python3 src/pinn_train.py
+Run: python src/phase3_pinn/pinn_train.py
 """
 
 import torch

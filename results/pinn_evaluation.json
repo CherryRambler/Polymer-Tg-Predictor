@@ -1,0 +1,18 @@
+{
+  "model_file": "models/pinn_diffusion.pt",
+  "D": 0.1,
+  "time_snapshots": [
+    0.0,
+    0.1,
+    0.5,
+    1.0,
+    2.0,
+    5.0
+  ],
+  "n_x": 200,
+  "corner_rule": "excluded points with t <= 0.05 and (x < 0.03 or x > 0.97)",
+  "mae_excluding_corner": 0.00621635388379199,
+  "max_abs_error_excluding_corner": 0.061726436331495105,
+  "mae_all_points": 0.00851112277330425,
+  "max_abs_error_all_points": 0.9925891160964966
+}

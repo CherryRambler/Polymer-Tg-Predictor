@@ -7,7 +7,7 @@ models make DIFFERENT kinds of mistakes -- averaging cancels out some of
 each model's individual errors. It's one of the simplest, cheapest things
 to try in ML before reaching for anything more complex.
 
-Run: python3 src/ensemble.py
+Run: python src/analysis/ensemble.py
 """
 
 import pandas as pd

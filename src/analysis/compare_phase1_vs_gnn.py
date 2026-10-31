@@ -7,7 +7,7 @@ weakness (bad predictions on structurally rare polymers) -- not just
 "which overall MAE is smaller," but "did we solve the actual problem we
 built this for."
 
-Run: python3 src/compare_phase1_vs_gnn.py
+Run: python src/analysis/compare_phase1_vs_gnn.py
 """
 
 import pandas as pd

@@ -5,7 +5,7 @@ Purpose: Look up the raw data + metadata (source, reliability, conflicting
 Tg values) for our worst-predicted polymers, to check whether the model is
 actually wrong or the LABEL is unreliable/conflicting.
 
-Run: python3 src/inspect_worst_predictions.py
+Run: python src/phase1_baseline/inspect_worst_predictions.py
 """
 
 import pandas as pd

@@ -3,81 +3,86 @@
 [![tests](https://github.com/CherryRambler/Polymer-Tg-Predictor/actions/workflows/tests.yml/badge.svg)](https://github.com/CherryRambler/Polymer-Tg-Predictor/actions/workflows/tests.yml)
 [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://polymer-tg-predictor-8vh4dgb7geuxqwqkgyxqmg.streamlit.app/)
 
+Predicts a polymer's glass transition temperature (Tg) from its SMILES string
+with an XGBoost + graph-neural-network ensemble, with an honest uncertainty
+interval, and simulates diffusion-driven drug release with a physics-informed
+neural network (PINN) and a neural operator (DeepONet).
+
 **Live demo:** [polymer-tg-predictor-8vh4dgb7geuxqwqkgyxqmg.streamlit.app](https://polymer-tg-predictor-8vh4dgb7geuxqwqkgyxqmg.streamlit.app/)
 
-A from-scratch machine learning project predicting polymer glass transition
-temperature (Tg) from molecular structure, and modeling physical transport
-behavior (diffusion) with physics-informed learning. Built as a first ML
-project, progressing from classical ML baselines through Graph Neural
-Networks and Physics-Informed Neural Networks to a Neural Operator
-(DeepONet).
+<!-- TODO: add a screenshot of the app here as docs/screenshot.png
+     (Playwright was not available when this README was written):
+![App screenshot](docs/screenshot.png)
+-->
 
-**Status: All four phases complete (Phase 4 DeepONet done), rigor checks
-run, and the app is deployed on Streamlit Community Cloud.**
+## What it does
 
-## Web app
+- **Tg from structure.** XGBoost on Morgan fingerprints plus a GNN on the
+  atom/bond graph, averaged 50/50, trained on 7,363 real polymers.
+- **Uncertainty you can check.** A split-conformal interval built from
+  out-of-sample errors, plus warnings when the two models disagree or the
+  polymer is unlike the training data.
+- **Drug-release curves.** Fick's second law on a slab, solved by a PINN that
+  trains live in the app from the equation alone (no data), and by a DeepONet
+  trained once offline that answers instantly for any D.
+- **Validated against exact answers.** Both networks are scored against the
+  closed-form solution, including D values never seen in training.
 
-The Streamlit app (`app.py`) puts the trained models behind one interface,
-as a three-step flow over a full-page interactive particle background (the
-"Quantum Swarm": it is always in motion, reacts to the mouse, and clicks
-send shockwaves):
+The diffusion coefficient D is **set by you with a slider**. It is not
+predicted from the polymer, and the release curves are illustrative, not
+measured drug-release data.
 
-| Page | What it does |
+## Key results
+
+Tg (°C). Lower MAE is better. A random split lets near-identical polymers land
+in both train and test, while a **scaffold split** keeps every ring framework
+(Murcko scaffold) entirely in train or entirely in test, which makes it the
+more honest test for new chemistry.
+
+| Tg model | Random split: MAE / R² | Scaffold split: MAE / R² |
+|---|---|---|
+| XGBoost, Morgan fingerprints (5-fold CV, 7,363 polymers) | 27.5 / 0.871 | **36.3 / 0.795** |
+| XGBoost, same 737 test polymers as the GNN | 29.3 / 0.836 | – |
+| GNN, molecular graph (737 test polymers) | 28.5 / 0.830 | not measured |
+| **Ensemble, 50/50** (737 test polymers) | **26.1 / 0.859** | not measured |
+
+- **Interval:** the 90% interval is ±53 °C. On 369 held-out polymers not used
+  to set it, it contained the true Tg **88.3%** of the time. That interval is
+  calibrated on the random split: on XGBoost's scaffold-split errors the same
+  ±53 °C covers only **78%**.
+- **Warnings:** when XGBoost and the GNN disagree by more than 51 °C, held-out
+  error is 43.9 °C vs 25.1 °C otherwise. When the most similar training
+  polymer has Tanimoto similarity below 0.58, it is 56.7 °C vs 24.0 °C.
+- **Scaffold split, model size:** 36.3 °C uses the deployed XGBoost settings
+  (400 trees, depth 8). An earlier smaller model (200 trees, depth 5) gave
+  39.7 °C / R² 0.772.
+
+Diffusion (concentration C is between 0 and 1). Errors are against the exact
+solution, excluding the single corner where the initial and boundary
+conditions contradict each other.
+
+| Diffusion model | Result |
 |---|---|
-| 01 · Overview | Project title, introduction, objectives, the four phases and their results (the Phase 4 numbers are read from `results/deeponet_evaluation.json`), dataset, rigor checks and limitations. **Start** opens the Calculations page |
-| 02 · Calculations | Pick an example polymer or type a repeat-unit SMILES (with a live 2D structure preview), set the diffusion coefficient D (manual, or structure-predicted where available), optionally ask for a live-trained PINN, and optionally paste a batch of SMILES. **Calculate** runs every model and opens Results |
-| 03 · Results | Tg from XGBoost (Phase 1) and the GNN (Phase 2) plus their 50/50 ensemble; the drug release curve from the pre-trained DeepONet (Phase 4), with the PINN (Phase 3) overlaid when requested (PINN curves are cached per D); and the batch Tg table with a CSV download |
+| PINN, D = 0.1, full training (5,000 Adam epochs + 10 L-BFGS rounds) | MAE 0.0062, max error 0.062 |
+| DeepONet, 12 unseen D values inside the trained range 0.01–1.0 | MAE 0.0048, R² 0.999, worst D 0.0081 |
+| DeepONet, 6 unseen D values outside the trained range | MAE 0.0255, worst (D = 0.003) 0.071 |
 
-### Run the app locally
+SPEED_RESULTS_PLACEHOLDER
 
-```bash
-pip install -r requirements.txt
-streamlit run app.py
-```
+**Where the numbers come from:**
 
-## Setup
+- `results/cv_predictions.csv`: XGBoost random split.
+- `results/scaffold_split_metrics.json`: scaffold split.
+- `results/gnn_evaluation.json`: GNN and ensemble, from the committed `models/gnn_tg.pt`.
+- `results/uncertainty.json`: interval and warnings.
+- `results/pinn_evaluation.json`: PINN.
+- `results/deeponet_evaluation.json`: DeepONet.
+- `results/speed_benchmark.json`: speed.
 
-```bash
-pip install -r requirements.txt
-```
-
-`requirements.txt` installs the CPU-only PyTorch build (via the PyTorch
-extra index), plus RDKit, scikit-learn, XGBoost, PyTorch Geometric,
-Streamlit and pytest. `packages.txt` lists the system libraries
-(`libxrender1`, `libxext6`, `libsm6`) that RDKit's molecule drawing needs on
-Streamlit Cloud. The app falls back gracefully if drawing is unavailable.
-
-(`polymetrix` is NOT required to run this pipeline -- we only used it once,
-early on, to understand the source data's column structure. See "Data"
-below for how to get the actual dataset.)
-
-### Tests
-
-```bash
-pytest tests/
-```
-
-10 tests cover SMILES validation (`tests/test_validate_data.py`) and GNN
-graph construction and forward-pass shape (`tests/test_gnn.py`).
-
-## Data
-
-We use the PolyMetriX curated Tg dataset (7,367 real polymers, PSMILES +
-experimental Tg + source reliability metadata).
-
-**Getting the data:** the automatic PolyMetriX downloader pulls from
-Zenodo, which can time out on restricted/firewalled networks. Download the
-file manually in your browser instead:
-https://zenodo.org/records/14980914/files/LAMALAB_CURATED_Tg_structured.csv?download=1
-
-Save it to `data/raw/LAMALAB_CURATED_Tg_structured.csv`, then run
-`src/phase1_baseline/get_data.py` to convert it into our standard format.
-
-**Note on data quality:** PolyMetriX flags each entry's reliability
-(gold/yellow/black/red). "Black" (96% of the dataset) means "single
-source, unverified" -- NOT "known wrong" -- so we keep it. "Red" (4 rows)
-means "conflicting values across multiple sources" -- we drop only this
-category via `src/phase1_baseline/filter_reliable_data.py`.
+**Seeds:** the XGBoost CV and the GNN split use seed 42, the conformal split
+seed 0, and DeepONet training seed 0. The GNN's weight initialisation is not
+seeded, so retraining it moves its MAE by about 1 °C (an earlier run gave
+29.6 °C).
 
 ## Architecture
 
@@ -130,290 +135,191 @@ flowchart LR
 ```
 
 Cylinders are stored files (data and model weights); rectangles are code.
-The same SMILES feeds both Tg models. D comes **only** from the slider: it
-is not predicted from the polymer structure. The PINN has no training data
-and no saved weights. It is trained inside the app, from the diffusion
-equation alone, whenever you tick its box, and the result is cached per D.
+The same SMILES feeds both Tg models. D comes **only** from the slider. The
+PINN has no training data and no saved weights. It is trained inside the
+app, from the diffusion equation alone, whenever you tick its box, and the
+result is cached per D.
 
 A more detailed diagram, with every script and evaluation step, is in
 [docs/architecture.svg](docs/architecture.svg). It is generated: edit
 `docs/gen_architecture.py`, then run `python docs/gen_architecture.py`.
 
+## Quickstart
+
+You need Python 3.12 (the version used for deployment). The data and the
+trained models the app uses are already in the repository, so nothing needs
+downloading or training.
+
+```bash
+git clone https://github.com/CherryRambler/Polymer-Tg-Predictor.git
+cd Polymer-Tg-Predictor
+python -m venv .venv
+# Windows:      .venv\Scripts\activate
+# macOS/Linux:  source .venv/bin/activate
+pip install -r requirements.txt
+streamlit run app.py          # opens the app at http://localhost:8501
+pytest tests/ -v              # the same tests CI runs on every push
+```
+
+`requirements.txt` installs the CPU-only PyTorch build (through the PyTorch
+extra index), plus RDKit, scikit-learn, XGBoost, PyTorch Geometric, Streamlit
+and pytest. `packages.txt` lists the system libraries (`libxrender1`,
+`libxext6`, `libsm6`) that RDKit's molecule drawing needs on Streamlit Cloud.
+
+### Reproduce the results (optional)
+
+Run these from the project root. Each script states its inputs and outputs at
+the top.
+
+```bash
+# Data (OPTIONAL: data/raw/ is already committed). Only needed to rebuild it from
+# the source file, which you must first download by hand from Zenodo (its
+# automatic download often times out):
+#   https://zenodo.org/records/14980914/files/LAMALAB_CURATED_Tg_structured.csv?download=1
+#   saved as data/raw/LAMALAB_CURATED_Tg_structured.csv
+python src/phase1_baseline/get_data.py              # source CSV -> data/raw/polymer_tg_polymetrix.csv
+python src/phase1_baseline/filter_reliable_data.py  # drop the 4 'red' (conflicting) entries
+
+# Checks and features
+python src/phase1_baseline/validate_data.py         # every SMILES parses
+python src/phase1_baseline/featurize.py             # -> data/processed/featurized.csv
+
+# Phase 1: XGBoost (also writes a 92 MB random forest that is not committed)
+python src/phase1_baseline/train_baseline.py        # 5-fold CV -> results/cv_predictions.csv
+python src/phase1_baseline/plot_results.py
+python src/phase1_baseline/inspect_worst_predictions.py
+python src/phase1_baseline/scaffold_split_eval.py   # -> results/scaffold_split_*.{json,csv}
+
+# Phase 2: GNN
+python src/phase2_gnn/gnn_data.py                   # -> data/processed/graph/polymer_graphs.pt
+python src/phase2_gnn/gnn_train.py                  # overwrites models/gnn_tg.pt
+python src/phase2_gnn/gnn_evaluate.py               # committed GNN + ensemble -> results/gnn_evaluation.json
+python src/analysis/compare_phase1_vs_gnn.py
+python src/analysis/ensemble.py
+python src/analysis/learned_ensemble.py             # blend-weight search (50/50 is best)
+python src/analysis/uncertainty.py                  # -> results/uncertainty.json
+
+# Phase 3: PINN
+python src/phase3_pinn/pinn_train.py                # D = 0.1 -> models/pinn_diffusion.pt (not committed)
+python src/phase3_pinn/pinn_evaluate.py             # -> results/pinn_evaluation.json
+
+# Phase 4: DeepONet
+python src/phase4_neural_operator/train_deeponet.py     # overwrites models/deeponet_diffusion.pt
+python src/phase4_neural_operator/deeponet_evaluate.py  # -> results/deeponet_evaluation.json
+python src/phase4_neural_operator/deeponet_compare.py   # before/after table (trains 3 recipes)
+python src/phase4_neural_operator/speed_benchmark.py    # -> results/speed_benchmark.{json,png}
+```
+
+## How each part works
+
+**Data.** The PolyMetriX curated Tg dataset has 7,367 polymers with repeat-unit
+SMILES and experimental Tg. Each entry has a reliability flag. "Black" (96% of
+rows) means single-source, not wrong, so it is kept. Only the 4 "red" rows
+(conflicting values across sources) are dropped, leaving 7,363.
+
+**Tg models.** XGBoost uses a 256-bit Morgan fingerprint (radius 2). The GNN
+(GINEConv) reads the molecular graph directly: atoms are nodes (element,
+degree, aromaticity, charge) and bonds are edges (bond type, ring
+membership). The app shows their 50/50 average. A search over blend weights
+(`learned_ensemble.py`) found 50/50 to be the best. The ensemble beats either
+model alone because their errors partly cancel.
+
+**Uncertainty** (`src/analysis/uncertainty.py`). The 737 polymers held out from
+the GNN also have out-of-fold XGBoost predictions, so their ensemble errors
+are genuinely out-of-sample. Half (368) set the interval: it is the
+ceil((n + 1) × 0.9)-th smallest absolute error, the finite-sample conformal
+rule. The other half (369) measure its real coverage. Both warning thresholds
+come from the first half and are checked on the second.
+
+**Diffusion problem.** Fick's second law, dC/dt = D d²C/dx², on a slab
+0 ≤ x ≤ 1 for 0 ≤ t ≤ 5. The initial condition is C = 1 everywhere, and the
+boundary condition holds C at 0 on both faces. The exact answer is a Fourier
+series (`src/phase3_pinn/pinn_analytical.py`). All units are dimensionless.
+
+**PINN** (`src/phase3_pinn/`). A small tanh network maps (x, t) to C. It is
+trained only on the physics: the PDE residual (through automatic
+differentiation) plus the initial and boundary conditions. Training uses Adam
+then L-BFGS, resampling points between L-BFGS rounds to avoid overfitting one
+fixed point set. One network covers one value of D.
+
+**DeepONet** (`src/phase4_neural_operator/`). It learns the whole map
+(D, x, t) → C: a branch net encodes D and a trunk net encodes (x, t). Its
+training data are exact solutions, not PINN outputs, so it doesn't inherit
+PINN error. The deployed recipe (`train_deeponet.py --config improved`, seed 0):
+
+- 200 D values sampled log-uniformly from 0.01 to 1.0.
+- log₁₀ D fed to the branch net.
+- Time points packed toward t = 0, where the solution changes fastest.
+- Exact labels at t = 0.
+- 1,500 Adam epochs.
+
+Compared with the first recipe it cut held-out error about 4×. The full
+before/after table is in `results/deeponet_before_after.md`.
+
 ## Project structure
 
-```
+```text
 Polymer-Tg-Predictor/
 ├── app.py                       # Streamlit web app (deployed)
-├── data/
-│   ├── raw/                     # original downloaded/converted data
-│   └── processed/               # featurized data (fingerprints, graphs)
-├── docs/                        # architecture diagram + its generator script
+├── data/raw/                    # PolyMetriX Tg data (committed)
+├── docs/                        # detailed architecture diagram + its generator
+├── models/                      # the three model files the app loads (others are gitignored)
+├── results/                     # every metric quoted in this README, plus plots
 ├── src/
-│   ├── phase1_baseline/         # classical ML: data prep, featurization, RF/XGBoost, scaffold split
+│   ├── phase1_baseline/         # data prep, fingerprints, XGBoost, scaffold split
 │   ├── phase2_gnn/              # graph neural network
-│   ├── phase3_pinn/             # physics-informed neural network
-│   ├── phase4_neural_operator/  # DeepONet neural operator
-│   └── analysis/                # cross-phase comparison and ensembling
-├── models/                      # saved trained models (mostly gitignored; app models are committed)
-├── results/                     # metrics, predictions, diagnostic plots
-├── tests/                       # pytest suite
-├── requirements.txt             # Python dependencies
+│   ├── phase3_pinn/             # physics-informed neural network + exact solution
+│   ├── phase4_neural_operator/  # DeepONet, its evaluation and the speed benchmark
+│   └── analysis/                # ensemble, blend-weight search, uncertainty
+├── tests/                       # pytest suite (also run by GitHub Actions)
+├── .github/workflows/tests.yml  # CI: runs the tests on every push and pull request
+├── requirements.txt             # Python dependencies (CPU-only PyTorch)
 └── packages.txt                 # system packages for Streamlit Cloud
 ```
 
-## Pipeline (run in order, from the project root)
+## Limitations
 
-```bash
-# 1. Get and clean the data
-python src/phase1_baseline/get_data.py              # convert downloaded CSV to our format
-python src/phase1_baseline/filter_reliable_data.py  # drop 'red' (conflicting) entries
-python src/phase1_baseline/validate_data.py         # check all SMILES parse correctly
+- **D is not a drug diffusivity.** It is a dimensionless number you choose
+  with a slider, and the release curve is illustrative. Nothing in this
+  project predicts D from polymer structure, and the app does not use a
+  permeability-derived proxy for D.
+- **Small, mostly single-source dataset.** It has about 7.4k polymers
+  (7,363), and 96% of the Tg values come from a single unverified source.
+  A few predictions are off by 150–300 °C. These are mostly unusual
+  structures (rare ring systems, uncommon atoms like Se), and a few look like
+  label errors (e.g. `polymer_5771`: both models predict 340–490 °C against a
+  recorded 25 °C; not independently verified).
+- **Scores drop on new chemistry.** XGBoost's MAE rises from 27.5 °C
+  (random split) to 36.3 °C (scaffold split). The GNN and the ensemble have
+  not been scaffold-tested. The interval is calibrated on the random split
+  and covers only 78% of XGBoost's scaffold-split errors, so for novel
+  structures it is too narrow (the app says so).
+- **PINN corner conflict.** At x = 0 (or 1) and t = 0 the initial condition
+  (C = 1) and boundary condition (C = 0) contradict each other, so no smooth
+  network can match both. The error there reaches 0.99. All PINN and
+  DeepONet errors above exclude points with t ≤ 0.05 and x < 0.03 or
+  x > 0.97. The PINN trained in the app uses a shorter schedule than the
+  validated one (see the speed section for its accuracy).
+- **DeepONet weaknesses.**
+  - Its error grows outside the trained D range (MAE 0.071 at D = 0.003,
+    about 9× its worst in-range D).
+  - It is not constrained to stay in [0, 1]. On the app's curve, 40% of
+    points dip below 0 late in the release, but the worst is only −0.007,
+    and 0.5% exceed 1 (worst 1.009).
+  - It only knows this one slab geometry and set of conditions.
+  - Its branch net sees a single number (D), so it is a parametric
+    surrogate rather than an operator over general input functions.
+- **The closed form wins here.** For this simple geometry, the exact series
+  is both faster and more accurate than either network. The networks are
+  here to show the method, which matters for problems with no closed-form
+  solution.
 
-# 2. Phase 1: classical ML baseline
-python src/phase1_baseline/featurize.py             # SMILES -> RDKit descriptors + Morgan fingerprints
-python src/phase1_baseline/train_baseline.py        # train + cross-validate Random Forest and XGBoost
-python src/phase1_baseline/plot_results.py          # diagnostic plots
-python src/phase1_baseline/inspect_worst_predictions.py  # look up metadata for worst misses
+## Next steps
 
-# 3. Phase 2: Graph Neural Network
-python src/phase2_gnn/gnn_data.py                   # SMILES -> PyTorch Geometric graph objects
-python src/phase2_gnn/gnn_train.py                  # train + evaluate the GNN
-python src/analysis/compare_phase1_vs_gnn.py        # compare GNN vs XGBoost on the same polymers
-python src/analysis/ensemble.py                     # average both models' predictions
-
-# 4. Phase 3: Physics-Informed Neural Network (diffusion)
-python src/phase3_pinn/pinn_train.py                # train on the diffusion PDE (Adam + L-BFGS)
-python src/phase3_pinn/pinn_evaluate.py             # validate against the exact analytical solution
-
-# 5. Phase 4: Neural Operator (DeepONet)
-python src/phase4_neural_operator/train_deeponet.py     # train once across D in [0.01, 1.0]
-python src/phase4_neural_operator/deeponet_evaluate.py  # held-out D evaluation -> results/deeponet_evaluation.json
-
-# 6. Rigor checks
-python src/phase1_baseline/scaffold_split_eval.py   # scaffold-split re-evaluation
-python src/analysis/learned_ensemble.py             # search for the best XGBoost/GNN blend weight
-```
-
-## Results
-
-### Summary
-
-| Phase | Approach | Result |
-|---|---|---|
-| 1 | Random Forest / XGBoost on Morgan fingerprints | XGBoost MAE 27.5°C, R2 0.87 (random 5-fold CV) |
-| 1 (rigor) | XGBoost, scaffold split | MAE 39.7°C, R2 0.772 |
-| 2 | Graph Neural Network (GINEConv) + ensemble | Ensemble MAE 26.7°C, R2 0.855 |
-| 3 | Physics-Informed Neural Network (diffusion PDE) | Mean error 0.0062 vs. exact solution |
-| 4 | Neural Operator (DeepONet, diffusion PDE across many D) | MAE 0.0758, R2 0.661 on held-out D values |
-
-### Phase 1: Random Forest / XGBoost on Morgan fingerprints
-
-5-fold cross-validated on 7,363 polymers:
-
-| Model | MAE | R2 |
-|---|---|---|
-| Dummy (predict the mean) | 95.0°C | -- |
-| Random Forest | 29.9°C | 0.854 |
-| XGBoost | 27.5°C | 0.87 |
-
-### Phase 2: Graph Neural Network (GINEConv)
-
-Single 80/10/10 train/val/test split (7,363 polymers). Uses bond type and
-ring-membership features via message passing, instead of a fixed
-fingerprint checklist.
-
-Evaluated on the same 737-polymer test set as XGBoost's corresponding
-subset:
-
-| Model | MAE | R2 |
-|---|---|---|
-| XGBoost (Phase 1) | 29.3°C | 0.836 |
-| GNN (Phase 2) | 29.6°C | 0.825 |
-| **Ensemble (average of both)** | **26.7°C** | **0.855** |
-
-The GNN alone roughly ties XGBoost overall, but improved on 7 of
-XGBoost's 10 worst individual predictions -- evidence it handles
-structurally rare polymers (no close fingerprint match) better, even
-without winning on average. Averaging both models' predictions beats
-either one alone, confirming they make different, partially-cancelling
-errors.
-
-### Phase 3: Physics-Informed Neural Network (diffusion PDE)
-
-Unlike Phases 1-2 (structure -> single property), Phase 3 predicts full
-time-and-space behavior: how a drug concentration profile evolves as it
-diffuses out of a polymer slab, governed by Fick's second law
-(dC/dt = D * d2C/dx2). The network (`src/phase3_pinn/pinn_model.py`, a
-tanh-activated MLP taking (x, t) -> C) was trained with NO example
-solution curves -- only a three-part physics loss (PDE residual via
-automatic differentiation, initial condition, boundary condition).
-
-Training uses two phases: Adam for broad convergence, then L-BFGS
-fine-tuning for precision (`src/phase3_pinn/pinn_train.py`) -- standard
-PINN practice. Validated against the exact analytical solution (truncated
-Fourier series, `src/phase3_pinn/pinn_analytical.py`).
-
-**Result:**
-
-| Metric | Value |
-|---|---|
-| Mean absolute error (excluding IC/BC corner conflict points) | 0.0062 |
-| Max absolute error (excluding corner points) | 0.062 |
-| Max absolute error (all points, including the corner) | ~0.66-0.99 (run-dependent) |
-
-The network correctly matches the true diffusion behavior at essentially
-every point in the domain. The "max error (all points)" number is
-misleading on its own -- see Known Limitations below.
-
-**Limitation:** a PINN is trained for one fixed D. In the evaluation above
-D=0.1; in the web app, a fresh PINN is trained live for whatever D the user
-picks, which takes a while per new D value. Phase 4 removes that cost.
-
-### Phase 4: Neural Operator (DeepONet)
-
-A Phase 3 PINN has to be retrained for every new diffusion coefficient. A
-DeepONet instead learns the whole solution *operator* -- the mapping
-(D, x, t) -> C -- so after a single offline training run it can produce
-the release curve for any D in a single forward pass.
-
-- **Model:** `src/phase4_neural_operator/deeponet_model.py` (branch net on
-  D, trunk net on (x, t); 3 hidden layers of 64 units, 64-dim latent).
-- **Training data:** `generate_training_data.py` labels the points with the
-  *exact* analytical solution, not with PINN outputs, so the DeepONet
-  doesn't inherit the PINN's own approximation error. 100 D values sampled
-  uniformly from [0.01, 1.0] (the same range as the app's D slider), each
-  on a 25 x 25 (x, t) grid.
-- **Training:** Adam, 600 epochs (`train_deeponet.py`). Run once, offline.
-  The app only loads the saved weights.
-- **Evaluation:** `deeponet_evaluate.py`, on 8 D values not seen during
-  training (20,000 points total).
-
-**Result (held-out D values):**
-
-| Metric | Value |
-|---|---|
-| Overall MAE | 0.0758 |
-| Overall R2 | 0.661 |
-
-Per-D breakdown:
-
-| D | MAE |
-|---|---|
-| 0.02 | 0.298 |
-| 0.15 | 0.087 |
-| 0.28 | 0.058 |
-| 0.42 | 0.034 |
-| 0.55 | 0.025 |
-| 0.68 | 0.028 |
-| 0.81 | 0.034 |
-| 0.95 | 0.041 |
-
-This is a deliberate trade: the DeepONet is less accurate than a dedicated
-per-D PINN (MAE 0.0062), but it is instant. Accuracy is good across most of
-the range and worst near the low-D extreme (see Known Limitations).
-
-## Rigor checks
-
-Two follow-up checks were run to test whether our reported metrics and
-modeling choices actually hold up under more scrutiny.
-
-### Scaffold-split evaluation
-
-Our original Phase 1/2 metrics used random cross-validation splits. A
-random split can let structurally near-identical polymers land in both
-train and test (e.g. Poly(methyl methacrylate) and Poly(ethyl
-methacrylate) differ by one substituent) -- letting the model succeed by
-near-matching rather than genuinely generalizing.
-
-We re-evaluated using a **scaffold split** (`src/phase1_baseline/scaffold_split_eval.py`):
-grouping polymers by their Murcko scaffold (core ring/framework
-structure) and ensuring every polymer sharing a scaffold stays entirely
-within train OR test, never split across both.
-
-| Split method | MAE | R2 |
-|---|---|---|
-| Random split (original) | 27.5°C | 0.87 |
-| **Scaffold split** | **39.7°C** | **0.772** |
-
-3,115 unique scaffolds were found across 7,363 polymers, confirming
-random splits were indeed letting related structures leak across
-train/test. The scaffold-split numbers above are the more honest measure
-of how well the model generalizes to genuinely novel polymer structures
--- the original numbers were not wrong, but they were measuring an easier
-task than true generalization.
-
-### Ensemble weighting check
-
-Our Phase 2 ensemble averages XGBoost and GNN predictions 50/50. Since
-XGBoost was individually somewhat more accurate (29.3°C vs GNN's 29.6°C
-MAE standalone), we tested whether a different blend weight would beat a
-flat average (`src/analysis/learned_ensemble.py`), searching weights from
-0 (all GNN) to 1 (all XGBoost) in steps of 0.05.
-
-**Result: alpha=0.50 (the original 50/50 split) was confirmed as the
-optimal weight**, with a smooth, single minimum at that exact point (MAE
-degrades steadily moving in either direction). This shows the ensemble's
-benefit comes from how the two models' *errors correlate*, not simply
-from weighting the individually-stronger model more -- a real, if modest,
-piece of evidence that the original ensemble design was sound rather than
-an arbitrary default.
-
-## Known limitations
-
-- A handful of Phase 1/2 predictions remain badly wrong (150-300°C error),
-  concentrated in structurally unusual polymers (rare ring systems,
-  uncommon heteroatoms like Se) with few similar neighbors in the
-  training data. The scaffold-split result (MAE 39.7°C) is the better
-  estimate of accuracy on genuinely novel structures.
-- A few specific cases (e.g. `polymer_5771`: both models predict
-  ~340-490°C vs an actual recorded value of 25°C) are suspected data/
-  label errors rather than model failures -- not independently verified.
-- We initially misdiagnosed the "black" reliability flag as meaning
-  "unreliable" and nearly discarded 96% of the dataset over it; corrected
-  after checking the actual value counts. Documenting this here as a
-  reminder to verify assumptions about metadata before filtering on it.
-- The PINN has a mathematically unavoidable error at the single point
-  (x=0 or x=L, t=0), where the initial condition (C=1) and boundary
-  condition (C=0) directly contradict each other -- a known limitation of
-  this problem formulation, not a training bug. An earlier attempt at
-  L-BFGS fine-tuning also caused the model to diverge at large t by
-  overfitting to one fixed set of collocation points; fixed by resampling
-  fresh points across multiple smaller L-BFGS rounds instead of one large
-  call on frozen points.
-- The Phase 4 DeepONet's error is not uniform across D: on the held-out
-  evaluation set (`src/phase4_neural_operator/deeponet_evaluate.py`), MAE
-  is worst near the low-D extreme (D=0.02 -> MAE 0.298) and much better
-  in the middle of the trained range (D=0.55 -> MAE 0.025). It also
-  occasionally predicts slightly negative concentrations at high D
-  (physically impossible, since concentration can't be negative) --
-  a real limitation of training on only 100 D samples for 600 epochs,
-  not a display bug. Training on more D samples/epochs would likely
-  reduce this; we report the numbers as measured rather than a
-  hand-picked better run.
-- The diffusion coefficient D is not yet reliably predicted from polymer
-  structure. The app's D is set manually (or, where available, comes from
-  a permeability-derived proxy, which is not a literal drug-diffusion
-  coefficient). Properly connecting Phase 1/2's structure-to-property
-  models to Phases 3/4 requires a diffusion-coefficient dataset, which we
-  don't yet have.
-
-## Roadmap
-
-- [x] Phase 0: tooling setup (RDKit, sklearn, xgboost)
-- [x] Phase 1: classical ML baseline (XGBoost MAE 27.5°C / R2 0.87)
-- [x] Phase 2: Graph Neural Network (ensemble MAE 26.7°C / R2 0.855)
-- [x] Phase 3: Physics-Informed Neural Network (diffusion PDE, mean error
-      0.0062 vs. exact solution)
-- [x] Phase 4: Neural Operator (DeepONet, trained once across D in
-      [0.01, 1.0]; MAE 0.0758 / R2 0.661 on held-out D values not seen
-      during training -- trades some accuracy vs. a dedicated per-D PINN
-      for instant inference; accuracy is worst near the low-D extreme,
-      see Known Limitations)
-- [x] Rigor checks: scaffold-split evaluation (MAE 39.7°C / R2 0.772) and
-      ensemble weight search (50/50 confirmed optimal)
-- [x] Test suite (pytest) and Streamlit Cloud deployment
-      ([live app](https://polymer-tg-predictor-8vh4dgb7geuxqwqkgyxqmg.streamlit.app/))
-- [ ] Improve DeepONet accuracy at low D (more D samples / epochs, or a
-      non-negativity constraint on the output)
-- [ ] Predict D from polymer structure with a real diffusion-coefficient
-      dataset, linking Phases 1/2 to Phases 3/4
+- Scaffold-split evaluation of the GNN and the ensemble, and an interval
+  calibrated on that split.
+- Seed the GNN's weight initialisation so retraining is exactly reproducible.
+- Enforce 0 ≤ C ≤ 1 in the DeepONet (e.g. a bounded output layer).
+- Link structure to diffusion properly, with a measured diffusion-coefficient
+  dataset.
+- Add a screenshot and a Docker setup.

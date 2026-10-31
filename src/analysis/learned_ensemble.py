@@ -14,7 +14,7 @@ NOT by peeking at final test performance and picking whatever wins there
 correct approach (used here) is to find the weight on validation data,
 then report performance on genuinely unseen data.
 
-Run: python3 src/analysis/learned_ensemble.py
+Run: python src/analysis/learned_ensemble.py
 """
 
 import pandas as pd

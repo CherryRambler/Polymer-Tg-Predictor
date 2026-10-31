@@ -1,15 +1,15 @@
 """
-load_local_tg_data.py
+get_data.py
 
 Purpose: Load the manually-downloaded PolyMetriX Tg dataset from disk,
 bypassing the package's built-in downloader (which times out on
-restricted/firewalled networks). Same output format as get_data.py.
+restricted/firewalled networks).
 
 Before running: download this file manually in your browser and save it to
 data/raw/LAMALAB_CURATED_Tg_structured.csv
   https://zenodo.org/records/14980914/files/LAMALAB_CURATED_Tg_structured.csv?download=1
 
-Run: python3 src/load_local_tg_data.py
+Run: python src/phase1_baseline/get_data.py
 """
 
 import pandas as pd

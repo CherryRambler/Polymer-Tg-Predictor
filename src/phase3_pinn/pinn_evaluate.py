@@ -3,8 +3,10 @@ pinn_evaluate.py
 
 Purpose: Check the trained PINN against the known exact solution.
 
-Run: python3 src/pinn_evaluate.py
+Run: python src/phase3_pinn/pinn_evaluate.py
 """
+
+import json
 
 import torch
 import numpy as np
@@ -69,6 +71,17 @@ def main():
     print(f"Mean absolute error (excluding IC/BC corner conflict points): "
           f"{all_errors_no_corner.mean():.4f}")
     print(f"Max absolute error (excluding corner points): {all_errors_no_corner.max():.4f}")
+
+    with open("results/pinn_evaluation.json", "w") as f:
+        json.dump({
+            "model_file": MODEL_PATH, "D": D, "time_snapshots": time_snapshots, "n_x": len(x_plot),
+            "corner_rule": "excluded points with t <= 0.05 and (x < 0.03 or x > 0.97)",
+            "mae_excluding_corner": float(all_errors_no_corner.mean()),
+            "max_abs_error_excluding_corner": float(all_errors_no_corner.max()),
+            "mae_all_points": float(all_errors.mean()),
+            "max_abs_error_all_points": float(max_abs_error),
+        }, f, indent=2)
+    print("Saved metrics to results/pinn_evaluation.json")
     print("\n(The corner points at x=0 or x=1, t=0 have a mathematically"
           " unavoidable error since the initial condition C=1 and boundary"
           " condition C=0 contradict each other exactly there -- this is a"

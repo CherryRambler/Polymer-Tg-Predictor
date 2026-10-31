@@ -29,6 +29,7 @@ htmlcov/
 models/*.joblib
 models/*.pt
 models/*.pth
+models/candidates/
 
 # EXCEPTIONS: small files the deployed app needs
 !models/xgboost_tg.joblib

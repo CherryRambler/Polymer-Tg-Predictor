@@ -1,0 +1,54 @@
+{
+  "description": "Split-conformal 90% interval for the 50/50 XGBoost+GNN ensemble, from out-of-sample residuals only (results/ensemble_predictions.csv).",
+  "alpha": 0.1,
+  "nominal_coverage": 0.9,
+  "split_seed": 0,
+  "quantile_rule": "ceil((n_cal + 1) * 0.9)-th smallest |residual| on the calibration half",
+  "n_cal": 368,
+  "n_eval": 369,
+  "half_width_C": 53.283469999999994,
+  "empirical_coverage_eval": 0.8834688346883469,
+  "xgboost_only": {
+    "half_width_C": 60.42901999999998,
+    "empirical_coverage_eval": 0.8834688346883469
+  },
+  "disagreement_warning": {
+    "definition": "|XGBoost - GNN| prediction, in C",
+    "threshold_C": 51.05117400000001,
+    "threshold_rule": "90th percentile on the calibration half",
+    "eval_above_threshold": {
+      "n": 42,
+      "mae": 43.85880813333333,
+      "coverage": 0.7142857142857143
+    },
+    "eval_at_or_below_threshold": {
+      "n": 327,
+      "mae": 25.079604562905196,
+      "coverage": 0.9051987767584098
+    }
+  },
+  "similarity_warning": {
+    "definition": "max Tanimoto similarity (Morgan r=2, 256 bits) to the training polymers",
+    "reference_set": "GNN training split (5,890 polymers) for the held-out analysis; the app compares against all 7,363 polymers, which the deployed XGBoost trained on",
+    "threshold": 0.5801358234295416,
+    "threshold_rule": "10th percentile on the calibration half",
+    "eval_below_threshold": {
+      "n": 36,
+      "mae": 56.731436263888895,
+      "coverage": 0.6388888888888888
+    },
+    "eval_at_or_above_threshold": {
+      "n": 333,
+      "mae": 24.026333117627626,
+      "coverage": 0.9099099099099099
+    }
+  },
+  "scaffold_context": {
+    "note": "Scaffold-split out-of-sample predictions exist for XGBoost only (no GNN), so no scaffold-calibrated ensemble interval is built. These numbers show how much wider errors are on structurally novel polymers.",
+    "source": "results/scaffold_split_predictions.csv",
+    "n": 7363,
+    "xgb_scaffold_half_width_C": 84.3947525024414,
+    "xgb_scaffold_coverage_eval_of_its_own_half_width": 0.9041281912004345,
+    "random_split_ensemble_half_width_coverage_on_xgb_scaffold_errors": 0.7806600570419666
+  }
+}
