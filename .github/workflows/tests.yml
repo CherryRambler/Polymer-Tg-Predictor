@@ -15,3 +15,11 @@ jobs:
         run: pip install -r requirements.txt
       - name: Run tests
         run: pytest tests/ -v
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t polymer-tg-predictor .
+      - name: Run tests inside the image
+        run: docker run --rm polymer-tg-predictor pytest tests/ -v

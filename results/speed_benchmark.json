@@ -1,0 +1,68 @@
+{
+  "environment": {
+    "cpu": "11th Gen Intel(R) Core(TM) i5-11400H @ 2.70GHz",
+    "logical_cpus": 4,
+    "torch_threads": 2,
+    "torch_version": "2.14.0+cpu",
+    "python_version": "3.12.9",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "device": "cpu"
+  },
+  "D_benchmarked": 0.3,
+  "timing_repeats_fast_paths": 50,
+  "pinn": {
+    "D": 0.3,
+    "settings": {
+      "n_epochs": 800,
+      "n_lbfgs_rounds": 5
+    },
+    "runs": [
+      {
+        "seed": 0,
+        "train_seconds": 37.73443889999908,
+        "grid_mae": 0.005857551626024146,
+        "app_curve_mae": 0.006147913760753333
+      },
+      {
+        "seed": 1,
+        "train_seconds": 30.97513009999966,
+        "grid_mae": 0.004155986737250377,
+        "app_curve_mae": 0.003929704826797187
+      },
+      {
+        "seed": 2,
+        "train_seconds": 39.729743300005794,
+        "grid_mae": 0.005270375830426804,
+        "app_curve_mae": 0.0061484597942098596
+      }
+    ],
+    "median_train_seconds": 37.73443889999908,
+    "median_grid_mae": 0.005270375830426804,
+    "median_app_curve_mae": 0.006147913760753333
+  },
+  "deeponet": {
+    "model_file": "models/deeponet_diffusion.pt",
+    "recipe": "improved",
+    "single_curve_median_seconds": 0.001679850000073202,
+    "batched": {
+      "n_D": 100,
+      "median_seconds": 0.04236359999777051,
+      "per_D_seconds": 0.0004236359999777051
+    },
+    "one_time": {
+      "data_generation_seconds": 9.271476599999005,
+      "training_seconds": 14620.917102699997,
+      "total_seconds": 14630.188579299996
+    },
+    "grid_mae": 0.004757376420554445,
+    "app_curve_mae": 0.005827781691219702
+  },
+  "analytical": {
+    "single_curve_median_seconds_50_terms": 0.002136150000296766,
+    "single_curve_median_seconds_400_terms": 0.014945700000680517
+  },
+  "break_even_n_D": 388,
+  "speedup_per_D_deeponet_inference_vs_pinn_training": 22462.981158052648,
+  "speedup_per_D_analytical_vs_deeponet_inference": 0.11239687669341107,
+  "note": "For this slab geometry the closed-form series is exact and faster than both networks; the networks matter for problems without a closed-form solution."
+}

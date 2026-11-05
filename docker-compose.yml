@@ -1,0 +1,13 @@
+services:
+  app:
+    build: .
+    image: polymer-tg-predictor:latest
+    ports:
+      - "8501:8501"
+    restart: unless-stopped
+
+  tests:
+    build: .
+    image: polymer-tg-predictor:latest
+    command: [ "pytest", "tests/", "-v" ]
+    profiles: [ "test" ] # only runs when you ask for it
